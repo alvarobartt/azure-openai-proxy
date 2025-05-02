@@ -1,0 +1,11 @@
+[package]
+name = "oaiaz-rs"
+version = "0.1.0"
+edition = "2024"
+readme = "README.md"
+license = "MIT OR Apache-2.0"
+description = "A proxy for OpenAI-compatible routes to Azure AI"
+repository = "https://github.com/alvarobartt/oaiaz-rs"
+authors = ["Alvaro Bartolome <alvarobartt@gmail.com>"]
+
+[dependencies]
