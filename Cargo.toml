@@ -1,5 +1,5 @@
 [package]
-name = "oaiaz-rs"
+name = "oaiaz"
 version = "0.1.0"
 edition = "2024"
 readme = "README.md"
