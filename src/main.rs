@@ -60,7 +60,7 @@ async fn handler(
 
     if requires_rewrite {
         *req.uri_mut() =
-            Uri::try_from("http:://0.0.0.0:8080/v1/chat/completions").map_err(|_| {
+            Uri::try_from("http://0.0.0.0:8080/v1/chat/completions").map_err(|_| {
                 tracing::info!(target: "oaiaz-proxy", "URI rewrite failed for: {}", req.uri());
                 StatusCode::INTERNAL_SERVER_ERROR
             })?;
