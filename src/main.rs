@@ -7,7 +7,8 @@ use axum::{
     Router,
 };
 use hyper_util::{client::legacy::connect::HttpConnector, rt::TokioExecutor};
-use tracing_subscriber::{fmt, prelude::*, EnvFilter};
+use tokio::signal;
+use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 type HttpClient = hyper_util::client::legacy::Client<HttpConnector, Body>;
 
@@ -15,11 +16,15 @@ type HttpClient = hyper_util::client::legacy::Client<HttpConnector, Body>;
 async fn main() {
     tracing_subscriber::registry()
         .with(
-            fmt::layer()
-                .with_target(true)
-                .with_level(true)
-                .with_filter(EnvFilter::from_default_env()),
+            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
+                format!(
+                    "{}=info,tower_http=debug,axum=trace",
+                    env!("CARGO_CRATE_NAME")
+                )
+                .into()
+            }),
         )
+        .with(tracing_subscriber::fmt::layer().without_time())
         .init();
 
     let client: HttpClient =
@@ -36,7 +41,10 @@ async fn main() {
         "Listening on {}",
         listener.local_addr().unwrap()
     );
-    axum::serve(listener, app).await.unwrap();
+    axum::serve(listener, app)
+        .with_graceful_shutdown(shutdown_signal())
+        .await
+        .unwrap();
 }
 
 async fn handler(
@@ -75,4 +83,28 @@ async fn handler(
             StatusCode::BAD_GATEWAY
         })
         .map(|res| res.into_response())
+}
+
+async fn shutdown_signal() {
+    let ctrl_c = async {
+        signal::ctrl_c()
+            .await
+            .expect("failed to install Ctrl+C handler");
+    };
+
+    #[cfg(unix)]
+    let terminate = async {
+        signal::unix::signal(signal::unix::SignalKind::terminate())
+            .expect("failed to install signal handler")
+            .recv()
+            .await;
+    };
+
+    #[cfg(not(unix))]
+    let terminate = std::future::pending::<()>();
+
+    tokio::select! {
+        _ = ctrl_c => {},
+        _ = terminate => {},
+    }
 }
