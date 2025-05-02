@@ -59,13 +59,11 @@ async fn handler(
             .unwrap_or(false);
 
     if requires_rewrite {
-        let query = req.uri().query().unwrap_or_default();
-        let new_uri = format!("http://0.0.0.0:8080/v1/chat/completions?{}", query);
-
-        *req.uri_mut() = Uri::try_from(new_uri).map_err(|_| {
-            tracing::info!(target: "oaiaz-proxy", "URI rewrite failed for: {}", req.uri());
-            StatusCode::INTERNAL_SERVER_ERROR
-        })?;
+        *req.uri_mut() =
+            Uri::try_from("http:://0.0.0.0:8080/v1/chat/completions").map_err(|_| {
+                tracing::info!(target: "oaiaz-proxy", "URI rewrite failed for: {}", req.uri());
+                StatusCode::INTERNAL_SERVER_ERROR
+            })?;
     }
 
     tracing::info!(
