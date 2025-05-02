@@ -18,7 +18,7 @@ async fn main() {
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 format!(
-                    "{}=info,tower_http=debug,axum=trace",
+                    "{}=debug,tower_http=debug,axum=trace",
                     env!("CARGO_CRATE_NAME")
                 )
                 .into()
@@ -32,7 +32,7 @@ async fn main() {
             .build(HttpConnector::new());
 
     let app = Router::new()
-        .route("/chat/completions", post(handler))
+        .route("/chat/completions", post(chat_completions_handler))
         .with_state(client);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:80").await.unwrap();
@@ -47,7 +47,7 @@ async fn main() {
         .unwrap();
 }
 
-async fn handler(
+async fn chat_completions_handler(
     State(client): State<HttpClient>,
     mut req: Request<Body>,
 ) -> Result<impl IntoResponse, StatusCode> {
