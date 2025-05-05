@@ -67,22 +67,9 @@ async fn chat_completions_handler(
         .ok_or(AzureError::MissingApiVersionParameter)?;
 
     if !API_VERSIONS.contains(&version) {
-        let stable_versions = API_VERSIONS
-            .iter()
-            .filter(|v| !v.ends_with("-preview"))
-            .copied()
-            .collect::<Vec<_>>();
-
-        let latest_preview = API_VERSIONS.iter().find(|v| v.ends_with("-preview"));
-
-        let mut supported = stable_versions.join(", ");
-        if let Some(preview) = latest_preview {
-            supported.push_str(&format!(", {}", preview));
-        }
-
         return Err(AzureError::UnsupportedApiVersionValue(
             version.to_string(),
-            supported,
+            API_VERSIONS.join(", ").into(),
         ));
     }
 
