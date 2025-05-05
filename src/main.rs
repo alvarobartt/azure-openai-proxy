@@ -17,6 +17,7 @@ use errors::AzureError;
 
 const API_VERSIONS: &[&str] = &["2024-05-01-preview", "2025-04-01"];
 
+// TODO: add clap support to configure the arguments via CLI arguments
 #[tokio::main]
 async fn main() {
     tracing_subscriber::registry()
@@ -73,12 +74,17 @@ async fn chat_completions_handler(
         ));
     }
 
-    *req.uri_mut() = Uri::try_from(format!(
-        "{}:{}/v1/chat/completions",
-        std::env::var("UPSTREAM_HOST").unwrap_or_else(|_| "http://localhost".into()),
-        std::env::var("UPSTREAM_PORT").unwrap_or_else(|_| "8080".into()),
-    ))
-    .unwrap();
+    *req.uri_mut() = {
+        let host = std::env::var("UPSTREAM_HOST").unwrap_or_else(|_| "http://localhost".into());
+        let port = std::env::var("UPSTREAM_PORT").ok();
+
+        let mut uri = host.replace("/v1", "");
+        if let Some(p) = port {
+            uri.push_str(&format!(":{}", p));
+        }
+        uri.push_str("/v1/chat/completions");
+        Uri::try_from(uri).unwrap()
+    };
 
     tracing::info!(
         target: "openai-azure-proxy",
