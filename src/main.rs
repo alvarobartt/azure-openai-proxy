@@ -90,7 +90,12 @@ async fn chat_completions_handler(
         ));
     }
 
-    *req.uri_mut() = Uri::try_from("http://0.0.0.0:8080/v1/chat/completions").unwrap();
+    *req.uri_mut() = Uri::try_from(format!(
+        "http://{}:{}/v1/chat/completions",
+        std::env::var("UPSTREAM_HOST").unwrap_or_else(|_| "localhost".into()),
+        std::env::var("UPSTREAM_PORT").unwrap_or_else(|_| "8080".into()),
+    ))
+    .unwrap();
 
     tracing::info!(
         target: "openai-azure-proxy",

@@ -15,10 +15,9 @@ RUN cargo chef cook --release --recipe-path recipe.json
 COPY . .
 RUN cargo build --release
 
-FROM ghcr.io/huggingface/text-generation-inference:3.2.3
+FROM ghcr.io/huggingface/text-generation-inference:3.2.3 AS tgi
 
 COPY --from=builder /app/target/release/openai-azure-proxy /usr/local/bin/openai-azure-proxy
-EXPOSE 80 8080
-COPY entrypoint.sh /entrypoint.sh
+COPY tgi-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
