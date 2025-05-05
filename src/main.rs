@@ -8,7 +8,6 @@ use axum::{
 };
 use hyper_util::{client::legacy::connect::HttpConnector, rt::TokioExecutor};
 use tokio::signal;
-use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 type HttpClient = hyper_util::client::legacy::Client<HttpConnector, Body>;
 
@@ -20,8 +19,8 @@ const API_VERSIONS: &[&str] = &["2024-05-01-preview", "2025-04-01"];
 // TODO: add clap support to configure the arguments via CLI arguments
 #[tokio::main]
 async fn main() {
-    tracing_subscriber::registry()
-        .with(
+    tracing_subscriber::fmt()
+        .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 format!(
                     "{}=info,tower_http=debug,axum=trace",
@@ -30,7 +29,7 @@ async fn main() {
                 .into()
             }),
         )
-        .with(tracing_subscriber::fmt::layer().without_time())
+        .compact()
         .init();
 
     let client: HttpClient =
