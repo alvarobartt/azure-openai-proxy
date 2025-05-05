@@ -9,18 +9,11 @@ ldconfig 2>/dev/null || echo 'unable to refresh ld cache, not a big deal in most
 source /usr/src/.venv/bin/activate
 
 UPSTREAM_HOST="host.docker.internal"
+export UPSTREAM_HOST="$UPSTREAM_HOST"
+
 UPSTREAM_PORT=8080
-
-if [[ -n "$PORT" ]]; then
-    if [[ "$PORT" -eq 80 ]]; then
-        echo "ERROR: PORT environment variable cannot be set to 80 when running text-generation-inference."
-        exit 1
-    fi
-    UPSTREAM_PORT=$PORT
-fi
-
-export UPSTREAM_HOST
 export UPSTREAM_PORT="$UPSTREAM_PORT"
+unset PORT
 
 # TODO: we should also skip the `-p/--port` argument handling and make sure that's not set to 80,
 # and that only one of `PORT`, `UPSTREAM_PORT` or `-p/--port` is set
