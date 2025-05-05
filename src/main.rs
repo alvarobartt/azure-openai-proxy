@@ -24,7 +24,7 @@ async fn main() {
         .with(
             tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
                 format!(
-                    "{}=debug,tower_http=debug,axum=trace",
+                    "{}=info,tower_http=debug,axum=trace",
                     env!("CARGO_CRATE_NAME")
                 )
                 .into()
