@@ -20,7 +20,7 @@ etc.) to [Azure AI Model Inference](https://learn.microsoft.com/en-us/azure/ai-f
 >
 > The examples below, runs the Azure AI proxy for [`TinyLlama/TinyLlama-1.1B-Chat-v1.0`](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0)
 > which requires ~2.42GiB of VRAM including the CUDA overhead and the KV Cache, with
-> the default context size of 4096. Note that the larger the context size i.e. maximum I/O
+> the default context size of 2048. Note that the larger the context size i.e. maximum I/O
 > supported tokens, the larger the KV Cache will be and the more VRAM will be consumed.
 
 ### Docker (Recommended)
