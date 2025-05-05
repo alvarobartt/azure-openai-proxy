@@ -7,12 +7,14 @@ etc.) to [Azure AI Model Inference](https://learn.microsoft.com/en-us/azure/ai-f
 
 ## Usage
 
-> [!NOTE] The `openai-azure-proxy` is backend agnostic, meaning that it will work seamlessly
+> [!NOTE]
+> The `openai-azure-proxy` is backend agnostic, meaning that it will work seamlessly
 > if the proxy is deployed on another instance that's not the instance running the inference
 > engine; so there's no such thing as requirements, besides having an OpenAI-compatible
 > service running somewhere that's accessible.
 
-> [!TIP] The capabilities / resources of the instance will depend on which model from the 
+> [!TIP]
+> The capabilities / resources of the instance will depend on which model from the 
 > Hugging Face Hub you want to run, TL;DR the bigger the model in number of parameters
 > (by the order of billion of parameters) the larger the total VRAM of the instance.
 >
@@ -34,7 +36,8 @@ cd openai-azure-proxy/
 docker build --platform=linux/amd64 -t text-generation-inference-azure:latest -f Dockerfile .
 ```
 
-> [!NOTE] Ideally the containers should be published to a publicly available Docker Registry,
+> [!NOTE]
+> Ideally the containers should be published to a publicly available Docker Registry,
 > either the Docker Hub (docker.io) or the Azure Container Registry (mcr.microsoft.com).
 
 Then you need to make sure that you have access to at least a single NVIDIA GPU,
@@ -55,7 +58,8 @@ Finally, you should be able to send requests in an Azure AI compatible manner to
 deployed proxy, and it should upstream those to the inference engine (being TGI in this
 case), making sure that the I/O schemas and paths are compliant with Azure AI.
 
-> [!WARNING] There may be a subtle overhead in the proxy, as in all the proxy services,
+> [!WARNING]
+> There may be a subtle overhead in the proxy, as in all the proxy services,
 > due to the network. The delay shouldn't be noticeable, but just take that into consideration
 > when benchmarking or testing the deployed service via the proxy, as the numbers won't be
 > the same as when directly calling to whatever engine is behind.
@@ -82,7 +86,8 @@ response = client.complete(
 )
 ```
 
-> [!NOTE] If deployed within Azure infrastructure, you should replace the "http://localhost"
+> [!NOTE]
+> If deployed within Azure infrastructure, you should replace the "http://localhost"
 > with the actual endpoint URI and the required credentials.
 
 ### Locally
