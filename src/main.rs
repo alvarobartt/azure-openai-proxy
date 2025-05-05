@@ -21,13 +21,8 @@ const API_VERSIONS: &[&str] = &["2024-05-01-preview", "2025-04-01"];
 async fn main() {
     tracing_subscriber::fmt()
         .with_env_filter(
-            tracing_subscriber::EnvFilter::try_from_default_env().unwrap_or_else(|_| {
-                format!(
-                    "{}=info,tower_http=debug,axum=trace",
-                    env!("CARGO_CRATE_NAME")
-                )
-                .into()
-            }),
+            tracing_subscriber::EnvFilter::try_from_default_env()
+                .unwrap_or_else(|_| format!("{}=info", env!("CARGO_CRATE_NAME")).into()),
         )
         .compact()
         .init();
@@ -41,11 +36,7 @@ async fn main() {
         .with_state(client);
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:80").await.unwrap();
-    tracing::info!(
-        target: "openai-azure-proxy",
-        "Listening on {}",
-        listener.local_addr().unwrap()
-    );
+    tracing::info!("Listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())
         .await
@@ -85,12 +76,7 @@ async fn chat_completions_handler(
         Uri::try_from(uri).unwrap()
     };
 
-    tracing::info!(
-        target: "openai-azure-proxy",
-        "Proxying {} request to {}",
-        req.method(),
-        req.uri()
-    );
+    tracing::info!("Proxying {} request to {}", req.method(), req.uri());
 
     client
         .request(req)
