@@ -5,7 +5,9 @@ use axum::{
 use serde_json::json;
 use thiserror::Error;
 
-// Reference: https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors
+/// Azure AI specific errors
+///
+/// Reference: https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors
 #[derive(Debug, Error)]
 pub enum AzureError {
     #[error("The api-version query parameter (?api-version=) is required for all requests")]

@@ -1,3 +1,4 @@
+use crate::handlers::chat_completions::chat_completions_handler;
 use axum::{body::Body, routing::post, Router};
 use hyper_util::{
     client::legacy::{connect::HttpConnector, Client},
@@ -5,10 +6,10 @@ use hyper_util::{
 };
 use tokio::signal;
 
-type HttpClient = Client<HttpConnector, Body>;
+/// Custom type for the Hyper HTTP Client that will be used / shared as the application state
+pub type HttpClient = Client<HttpConnector, Body>;
 
-use crate::handlers::chat_completions::chat_completions_handler;
-
+/// Starts the Axum server i.e. the proxy
 pub async fn start_server() {
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -32,6 +33,9 @@ pub async fn start_server() {
         .unwrap();
 }
 
+/// Handles the shutdown signal for the Axum application for a graceful shutdown
+///
+/// Reference: https://github.com/tokio-rs/axum/tree/main/examples/graceful-shutdown
 async fn shutdown_signal() {
     let ctrl_c = async {
         signal::ctrl_c()
