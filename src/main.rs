@@ -74,8 +74,8 @@ async fn chat_completions_handler(
     }
 
     *req.uri_mut() = Uri::try_from(format!(
-        "http://{}:{}/v1/chat/completions",
-        std::env::var("UPSTREAM_HOST").unwrap_or_else(|_| "localhost".into()),
+        "{}:{}/v1/chat/completions",
+        std::env::var("UPSTREAM_HOST").unwrap_or_else(|_| "http://localhost".into()),
         std::env::var("UPSTREAM_PORT").unwrap_or_else(|_| "8080".into()),
     ))
     .unwrap();
