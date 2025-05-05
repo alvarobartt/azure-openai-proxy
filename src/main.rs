@@ -12,6 +12,11 @@ use tracing_subscriber::{layer::SubscriberExt, util::SubscriberInitExt};
 
 type HttpClient = hyper_util::client::legacy::Client<HttpConnector, Body>;
 
+mod errors;
+use errors::AzureError;
+
+const API_VERSIONS: &[&str] = &["2024-05-01-preview", "2025-04-01"];
+
 #[tokio::main]
 async fn main() {
     tracing_subscriber::registry()
@@ -50,21 +55,42 @@ async fn main() {
 async fn chat_completions_handler(
     State(client): State<HttpClient>,
     mut req: Request<Body>,
-) -> Result<impl IntoResponse, StatusCode> {
-    let requires_rewrite = req.uri().path() == "/chat/completions"
-        && req
-            .uri()
-            .query()
-            .map(|q| q.contains("api-version"))
-            .unwrap_or(false);
+) -> Result<impl IntoResponse, AzureError> {
+    if req.uri().path() != "/chat/completions" {
+        return Err(AzureError::UnsupportedApiPath(req.uri().path().to_string()));
+    };
 
-    if requires_rewrite {
-        *req.uri_mut() =
-            Uri::try_from("http://0.0.0.0:8080/v1/chat/completions").map_err(|_| {
-                tracing::info!(target: "oaiaz-proxy", "URI rewrite failed for: {}", req.uri());
-                StatusCode::INTERNAL_SERVER_ERROR
-            })?;
+    let version = req
+        .uri()
+        .query()
+        .and_then(|q| {
+            q.split('&')
+                .find(|p| p.starts_with("api-version="))
+                .and_then(|p| p.split('=').nth(1))
+        })
+        .ok_or(AzureError::MissingApiVersionParameter)?;
+
+    if !API_VERSIONS.contains(&version) {
+        let stable_versions = API_VERSIONS
+            .iter()
+            .filter(|v| !v.ends_with("-preview"))
+            .copied()
+            .collect::<Vec<_>>();
+
+        let latest_preview = API_VERSIONS.iter().find(|v| v.ends_with("-preview"));
+
+        let mut supported = stable_versions.join(", ");
+        if let Some(preview) = latest_preview {
+            supported.push_str(&format!(", {}", preview));
+        }
+
+        return Err(AzureError::UnsupportedApiVersionValue(
+            version.to_string(),
+            supported,
+        ));
     }
+
+    *req.uri_mut() = Uri::try_from("http://0.0.0.0:8080/v1/chat/completions").unwrap();
 
     tracing::info!(
         target: "oaiaz-proxy",
@@ -76,10 +102,7 @@ async fn chat_completions_handler(
     client
         .request(req)
         .await
-        .map_err(|e| {
-            tracing::info!(target: "oaiaz-proxy", "Proxy error: {}", e);
-            StatusCode::BAD_GATEWAY
-        })
+        .map_err(|e| AzureError::Upstream(StatusCode::BAD_GATEWAY, e.to_string()))
         .map(|res| res.into_response())
 }
 
