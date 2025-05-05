@@ -42,7 +42,7 @@ async fn main() {
 
     let listener = tokio::net::TcpListener::bind("0.0.0.0:80").await.unwrap();
     tracing::info!(
-        target: "oaiaz-proxy",
+        target: "openai-azure-proxy",
         "Listening on {}",
         listener.local_addr().unwrap()
     );
@@ -93,7 +93,7 @@ async fn chat_completions_handler(
     *req.uri_mut() = Uri::try_from("http://0.0.0.0:8080/v1/chat/completions").unwrap();
 
     tracing::info!(
-        target: "oaiaz-proxy",
+        target: "openai-azure-proxy",
         "Proxying {} request to {}",
         req.method(),
         req.uri()

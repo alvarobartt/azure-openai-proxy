@@ -1,6 +1,6 @@
-# `oaiaz-rs`
+# `openai-azure-proxy`
 
-`oaiaz` is a proxy for OpenAI-compatible routes (`/v1/chat/completions`, `/v1/embeddings`,
+`openai-azure-proxy` is a proxy for OpenAI-compatible routes (`/v1/chat/completions`, `/v1/embeddings`,
 etc.) to [Azure AI Model Inference](https://learn.microsoft.com/en-us/azure/ai-foundry/model-inference/overview).
 
 [More information about the Azure AI Model Inference schemas](https://learn.microsoft.com/en-us/rest/api/aifoundry/modelinference/?view=rest-aifoundry-model-inference-2025-04-01).

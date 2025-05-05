@@ -17,7 +17,7 @@ RUN cargo build --release
 
 FROM ghcr.io/huggingface/text-generation-inference:3.2.3
 
-COPY --from=builder /app/target/release/oaiaz /usr/local/bin/oaiaz
+COPY --from=builder /app/target/release/openai-azure-proxy /usr/local/bin/openai-azure-proxy
 EXPOSE 80 8080
 COPY entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
