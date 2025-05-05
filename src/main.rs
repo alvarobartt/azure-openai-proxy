@@ -56,10 +56,6 @@ async fn chat_completions_handler(
     State(client): State<HttpClient>,
     mut req: Request<Body>,
 ) -> Result<impl IntoResponse, AzureError> {
-    if req.uri().path() != "/chat/completions" {
-        return Err(AzureError::UnsupportedApiPath(req.uri().path().to_string()));
-    };
-
     let version = req
         .uri()
         .query()

@@ -14,11 +14,6 @@ pub enum AzureError {
     #[error("Unsupported api-version '{0}'. The supported api-versions are '{1}'.")]
     UnsupportedApiVersionValue(String, String),
 
-    #[error(
-        "Unsupported API path '{0}'. The supported API paths are: '/chat/completions' and '/info'."
-    )]
-    UnsupportedApiPath(String),
-
     #[error("Upstream error: '{0}' (status {1})")]
     Upstream(StatusCode, String),
 }
@@ -37,14 +32,6 @@ impl IntoResponse for AzureError {
                 format!(
                     "Unsupported api-version '{0}'. The supported api-versions are '{1}'.",
                     ver, supported
-                ),
-            ),
-            Self::UnsupportedApiPath(path) => (
-                StatusCode::BAD_GATEWAY,
-                "UnsupportedApiPath",
-                format!(
-                    "Unsupported API path '{}'. The supported API paths are: '/chat/completions' and '/info'.",
-                    path
                 ),
             ),
             Self::Upstream(status, message) => (status, "UpstreamApi", message),
