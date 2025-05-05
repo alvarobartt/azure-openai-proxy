@@ -8,7 +8,7 @@ ldconfig 2>/dev/null || echo 'unable to refresh ld cache, not a big deal in most
 
 source /usr/src/.venv/bin/activate
 
-export UPSTREAM_HOST="http://host.docker.internal"
+export UPSTREAM_HOST="http://localhost"
 
 UPSTREAM_PORT="${UPSTREAM_PORT:-8080}"
 if [[ -n "$UPSTREAM_PORT" ]]; then
