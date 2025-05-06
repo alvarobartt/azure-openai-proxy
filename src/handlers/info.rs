@@ -42,7 +42,7 @@ pub async fn info_handler(
     check_api_version(req.uri().query())?;
 
     // Updates the request URI whilst keeping the headers, parameters, etc.
-    *req.uri_mut() = append_path_to_uri(state.uri, "/info");
+    *req.uri_mut() = append_path_to_uri(state.uri, "info");
 
     // Forwards request to the underlying upstream API
     tracing::info!("Proxying {} request to {}", req.method(), req.uri());
