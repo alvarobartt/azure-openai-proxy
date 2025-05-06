@@ -1,7 +1,7 @@
 //! # OpenAI Azure Proxy
 //!
 //! `openai-azure-proxy` is a binary that runs a proxy to make any OpenAI-compatible API (text
-//! generation only at the moment) compatible with Azure AI I/O schemas.
+//! generation only at the moment) compatible with Azure AI Model Inference API schemas.
 //!
 //! ## Installation
 //!

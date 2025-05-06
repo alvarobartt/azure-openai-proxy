@@ -1,7 +1,7 @@
 use crate::errors::AzureError;
 use axum::http::Uri;
 
-/// Supported Azure AI API versions
+/// Supported Azure AI Model Inference API versions
 ///
 /// Reference: https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions
 const API_VERSIONS: &[&str] = &["2024-05-01-preview", "2025-04-01"];

@@ -4,7 +4,7 @@ version = "0.1.0"
 edition = "2024"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-description = "A proxy for OpenAI-compatible routes to Azure AI"
+description = "A proxy for OpenAI-compatible routes to Azure AI Model Inference API"
 repository = "https://github.com/alvarobartt/openai-azure-proxy"
 authors = ["Alvaro Bartolome <alvarobartt@gmail.com>"]
 

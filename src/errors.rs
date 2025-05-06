@@ -5,7 +5,7 @@ use axum::{
 use serde_json::json;
 use thiserror::Error;
 
-/// Azure AI specific errors
+/// Azure AI Model Inference API and proxy errors
 ///
 /// Reference: https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors
 #[derive(Debug, Error)]

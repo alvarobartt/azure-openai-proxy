@@ -1,9 +1,9 @@
 # `openai-azure-proxy`
 
 `openai-azure-proxy` is a proxy for OpenAI-compatible routes (`/v1/chat/completions`, `/v1/embeddings`,
-etc.) to [Azure AI Model Inference](https://learn.microsoft.com/en-us/azure/ai-foundry/model-inference/overview).
+etc.) to [Azure AI Model Inference API](https://learn.microsoft.com/en-us/azure/ai-foundry/model-inference/overview).
 
-[More information about the Azure AI Model Inference schemas](https://learn.microsoft.com/en-us/rest/api/aifoundry/modelinference/?view=rest-aifoundry-model-inference-2025-04-01).
+[More information about the Azure AI Model Inference API schemas](https://learn.microsoft.com/en-us/rest/api/aifoundry/modelinference/?view=rest-aifoundry-model-inference-2025-04-01).
 
 ## Usage
 
@@ -18,7 +18,8 @@ etc.) to [Azure AI Model Inference](https://learn.microsoft.com/en-us/azure/ai-f
 > Hugging Face Hub you want to run, TL;DR the bigger the model in number of parameters
 > (by the order of billion of parameters) the larger the total VRAM of the instance.
 >
-> The examples below, runs the Azure AI proxy for [`TinyLlama/TinyLlama-1.1B-Chat-v1.0`](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0)
+> The examples below, runs the Azure AI Model Inference API proxy for
+> [`TinyLlama/TinyLlama-1.1B-Chat-v1.0`](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0)
 > which requires ~2.42GiB of VRAM including the CUDA overhead and the KV Cache, with
 > the default context size of 2048. Note that the larger the context size i.e. maximum I/O
 > supported tokens, the larger the KV Cache will be and the more VRAM will be consumed.
@@ -54,9 +55,9 @@ docker run \
     --model-id TinyLlama/TinyLlama-1.1B-Chat-v1.0
 ```
 
-Finally, you should be able to send requests in an Azure AI compatible manner to the
+Finally, you should be able to send requests in an Azure AI Model Inference compatible manner to the
 deployed proxy, and it should upstream those to the inference engine (being TGI in this
-case), making sure that the I/O schemas and paths are compliant with Azure AI.
+case), making sure that the I/O schemas and paths are compliant with the Azure AI Model Inference API.
 
 > [!WARNING]
 > There may be a subtle overhead in the proxy, as in all the proxy services,
@@ -102,7 +103,24 @@ Then you can easily run it and connect it to a running OpenAI-compatible server 
 exposes the `/v1/chat/completions` endpoint:
 
 ```bash
-UPSTREAM_HOST="https://api.openai.com" UPSTREAM_PORT="80" openai-azure-proxy 
+openai-azure-proxy --upstream-host https://api.openai.com
+```
+
+For more information check the `--help`:
+
+```console
+$ openai-azure-proxy --help
+A proxy for OpenAI-compatible routes to Azure AI Model Inference API
+
+Usage: openai-azure-proxy [OPTIONS]
+
+Options:
+  -h, --host <HOST>                    [env: HOST=] [default: 0.0.0.0]
+  -p, --port <PORT>                    [env: PORT=] [default: 80]
+  -u, --upstream-host <UPSTREAM_HOST>  [env: UPSTREAM_HOST=] [default: 0.0.0.0]
+  -u, --upstream-port <UPSTREAM_PORT>  [env: UPSTREAM_PORT=] [default: 8080]
+  -h, --help                           Print help
+  -V, --version                        Print version
 ```
 
 ## License
