@@ -1,4 +1,5 @@
 use crate::errors::AzureError;
+use axum::http::Uri;
 
 /// Supported Azure AI API versions
 ///
@@ -24,4 +25,11 @@ pub fn check_api_version(query: Option<&str>) -> Result<(), AzureError> {
     }
 
     Ok(())
+}
+
+/// Function to append a path (route) to an URI
+pub fn append_path_to_uri(uri: Uri, path: &str) -> Uri {
+    let mut uri = uri.to_string();
+    uri.push_str(path);
+    Uri::try_from(uri).unwrap()
 }
