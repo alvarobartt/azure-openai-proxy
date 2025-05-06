@@ -1,5 +1,10 @@
-use crate::handlers::chat_completions::chat_completions_handler;
-use axum::{body::Body, http::Uri, routing::post, Router};
+use crate::handlers::{chat_completions::chat_completions_handler, info::info_handler};
+use axum::{
+    body::Body,
+    http::Uri,
+    routing::{get, post},
+    Router,
+};
 use hyper_util::{
     client::legacy::{connect::HttpConnector, Client},
     rt::TokioExecutor,
@@ -40,8 +45,8 @@ pub async fn start_server(
 
     let state = ProxyState { client, uri };
 
-    // TODO(info)
     let app = Router::new()
+        .route("/info", get(info_handler))
         .route("/chat/completions", post(chat_completions_handler))
         .with_state(state);
 

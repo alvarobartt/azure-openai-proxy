@@ -10,13 +10,16 @@ use thiserror::Error;
 /// Reference: https://github.com/microsoft/api-guidelines/blob/vNext/azure/Guidelines.md#handling-errors
 #[derive(Debug, Error)]
 pub enum AzureError {
-    #[error("The api-version query parameter (?api-version=) is required for all requests")]
+    #[error("The api-version query parameter (?api-version=) is required for all requests.")]
     MissingApiVersionParameter,
 
     #[error("Unsupported api-version '{0}'. The supported api-versions are '{1}'.")]
     UnsupportedApiVersionValue(String, String),
 
-    #[error("Upstream error: '{0}' (status {1})")]
+    #[error("Internal proxy parsing error with: '{0}'.")]
+    InternalParsing(String),
+
+    #[error("Upstream error: '{0}' (status {1}).")]
     Upstream(StatusCode, String),
 }
 
@@ -35,6 +38,11 @@ impl IntoResponse for AzureError {
                     "Unsupported api-version '{0}'. The supported api-versions are '{1}'.",
                     ver, supported
                 ),
+            ),
+            Self::InternalParsing(message) => (
+                StatusCode::INTERNAL_SERVER_ERROR,
+                "InternalProxyParsing",
+                message,
             ),
             Self::Upstream(status, message) => (status, "UpstreamApi", message),
         };
