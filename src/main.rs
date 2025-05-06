@@ -32,16 +32,16 @@ use proxy::start_server;
 #[derive(Parser)]
 #[command(name = "openai-azure-proxy", version, about)]
 struct Cli {
-    #[arg(short, long, default_value = "0.0.0.0")]
+    #[arg(short, long, env, default_value = "0.0.0.0")]
     host: String,
 
-    #[arg(short, long, default_value = "80")]
+    #[arg(short, long, env, default_value = "80")]
     port: u16,
 
-    #[arg(short, long, default_value = "0.0.0.0")]
+    #[arg(short, long, env, default_value = "0.0.0.0")]
     upstream_host: String,
 
-    #[arg(short, long, default_value = "8080")]
+    #[arg(short, long, env, default_value = "8080")]
     upstream_port: u16,
 }
 
