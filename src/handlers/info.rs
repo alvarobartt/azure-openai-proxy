@@ -7,7 +7,7 @@ use axum::{
     body::{to_bytes, Body},
     extract::{Request, State},
     http::StatusCode,
-    response::{IntoResponse, Json, Response},
+    response::{IntoResponse, Json},
 };
 use serde::{Deserialize, Serialize};
 use std::usize;
@@ -24,6 +24,7 @@ enum ModelType {
     /// A model capable of taking chat-formatted messages and generate responses
     ChatCompletion,
     /// A model capable of generating embeddings from a text
+    #[allow(unused)]
     Embeddings,
 }
 
@@ -61,11 +62,12 @@ pub async fn info_handler(
     let info: InfoResponse = serde_json::from_slice(&body_bytes)
         .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
 
+    let (model_provider_name, model_name) = info.model_id.split_once("/").unwrap();
+
     let info = AzureInfoResponse {
-        // TODO: split model_id into provider and name, respectively
-        model_name: info.model_id.to_string(),
+        model_name: model_name.to_string(),
         model_type: ModelType::ChatCompletion,
-        model_provider_name: info.model_id.to_string(),
+        model_provider_name: model_provider_name.to_string(),
     };
 
     Ok(Json(info).into_response())
