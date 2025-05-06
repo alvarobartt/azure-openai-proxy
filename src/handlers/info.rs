@@ -62,7 +62,13 @@ pub async fn info_handler(
     let info: InfoResponse = serde_json::from_slice(&body_bytes)
         .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
 
-    let (model_provider_name, model_name) = info.model_id.split_once("/").unwrap();
+    let (model_provider_name, model_name) = info
+        .model_id
+        .split_once("/")
+        // Necessary to prevent that if the split fails for some reason as e.g. the `model_id` is
+        // internally set to a path, then the original `model_id` information is preserved and
+        // returned even if "not correct"
+        .unwrap_or((&info.model_id, &info.model_id));
 
     let info = AzureInfoResponse {
         model_name: model_name.to_string(),
