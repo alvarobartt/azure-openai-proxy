@@ -1,5 +1,5 @@
 use crate::handlers::chat_completions::chat_completions_handler;
-use axum::{body::Body, routing::post, Router};
+use axum::{body::Body, http::Uri, routing::post, Router};
 use hyper_util::{
     client::legacy::{connect::HttpConnector, Client},
     rt::TokioExecutor,
@@ -9,8 +9,20 @@ use tokio::signal;
 /// Custom type for the Hyper HTTP Client that will be used / shared as the application state
 pub type HttpClient = Client<HttpConnector, Body>;
 
+/// Custom API state to be shared across all the proxy endpoints
+#[derive(Debug, Clone)]
+pub struct ProxyState {
+    pub client: HttpClient,
+    pub uri: Uri,
+}
+
 /// Starts the Axum server i.e. the proxy
-pub async fn start_server() {
+pub async fn start_server(
+    host: Option<&str>,
+    port: Option<&u16>,
+    upstream_host: &str,
+    upstream_port: Option<&u16>,
+) {
     tracing_subscriber::fmt()
         .with_env_filter(
             tracing_subscriber::EnvFilter::try_from_default_env()
@@ -20,12 +32,27 @@ pub async fn start_server() {
         .init();
 
     let client: HttpClient = Client::builder(TokioExecutor::new()).build(HttpConnector::new());
+    let uri: Uri = {
+        let port_str = upstream_port.map(|p| format!(":{p}")).unwrap_or_default();
+        let full_uri = format!("{}{}", upstream_host, port_str);
+        Uri::try_from(full_uri).unwrap()
+    };
 
+    let state = ProxyState { client, uri };
+
+    // TODO(info)
     let app = Router::new()
         .route("/chat/completions", post(chat_completions_handler))
-        .with_state(client);
+        .with_state(state);
 
-    let listener = tokio::net::TcpListener::bind("0.0.0.0:80").await.unwrap();
+    let listener = tokio::net::TcpListener::bind(format!(
+        "{}:{}",
+        host.unwrap_or("0.0.0.0"),
+        port.unwrap_or(&80u16),
+    ))
+    .await
+    .unwrap();
+
     tracing::info!("Listening on {}", listener.local_addr().unwrap());
     axum::serve(listener, app)
         .with_graceful_shutdown(shutdown_signal())

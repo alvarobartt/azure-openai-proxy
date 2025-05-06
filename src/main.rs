@@ -17,8 +17,10 @@
 //! the proxy.
 //!
 //! ```
-//! openai-azure-proxy --upstream-host ... --upstream-port ...
+//! openai-azure-proxy --host 0.0.0.0 --port 80 --upstream-host 0.0.0.0 --upstream-port 8080
 //! ```
+
+use clap::Parser;
 
 mod errors;
 mod handlers;
@@ -27,8 +29,31 @@ mod utils;
 
 use proxy::start_server;
 
-// Entrypoint for the binary, that runs the Axum proxy
+#[derive(Parser)]
+#[command(name = "openai-azure-proxy", version, about)]
+struct Cli {
+    #[arg(short, long, default_value = "0.0.0.0")]
+    host: String,
+
+    #[arg(short, long, default_value = "80")]
+    port: u16,
+
+    #[arg(short, long, default_value = "0.0.0.0")]
+    upstream_host: String,
+
+    #[arg(short, long, default_value = "8080")]
+    upstream_port: u16,
+}
+
+/// Entrypoint for the binary, that runs the Axum proxy
 #[tokio::main]
 async fn main() {
-    start_server().await;
+    let args = Cli::parse();
+    start_server(
+        Some(&args.host),
+        Some(&args.port),
+        &args.upstream_host,
+        Some(&args.upstream_port),
+    )
+    .await;
 }
