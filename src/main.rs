@@ -23,6 +23,7 @@
 mod errors;
 mod handlers;
 mod proxy;
+mod utils;
 
 use proxy::start_server;
 
