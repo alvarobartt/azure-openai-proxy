@@ -26,7 +26,7 @@ if [[ -n "$UPSTREAM_PORT" ]]; then
     UPSTREAM_PORT=$UPSTREAM_PORT
 fi
 
-export HF_HUB_USER_AGENT_ORIGIN="azure:foundry:gpu-cuda:inference:tgi-native" 
+export HF_HUB_USER_AGENT_ORIGIN="azure:foundry:gpu-cuda:inference:tgi-native"
 
 text-generation-launcher --hostname "$UPSTREAM_HOST" --port "$UPSTREAM_PORT" "$@" &
 UPSTREAM_PID=$!
