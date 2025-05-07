@@ -28,7 +28,7 @@ fi
 
 export HF_HUB_USER_AGENT_ORIGIN="azure:foundry:gpu-cuda:inference:tgi-native" 
 
-text-generation-launcher --host "$UPSTREAM_HOST" --port "$UPSTREAM_PORT" "$@" &
+text-generation-launcher --hostname "$UPSTREAM_HOST" --port "$UPSTREAM_PORT" "$@" &
 UPSTREAM_PID=$!
 
 openai-azure-proxy --host "$PROXY_HOST" --port "$PROXY_PORT" --upstream-host "$UPSTREAM_HOST" --upstream-port "$UPSTREAM_PORT" &
