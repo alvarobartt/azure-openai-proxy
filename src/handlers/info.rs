@@ -10,11 +10,15 @@ use axum::{
     response::{IntoResponse, Json},
 };
 use serde::{Deserialize, Serialize};
-use std::usize;
+
+#[derive(Serialize, Deserialize, Debug)]
+struct ModelInfo {
+    id: String,
+}
 
 #[derive(Serialize, Deserialize, Debug)]
 struct InfoResponse {
-    model_id: String,
+    data: Vec<ModelInfo>,
 }
 
 // Reference: https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-model-info/get-model-info?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#modeltype
@@ -56,20 +60,20 @@ pub async fn info_handler(
         .map(|r| r.into_response())?;
 
     // Parsing response body into Azure AI Model Inference compliant JSON
-    let body_bytes = to_bytes(body.into_body(), usize::MAX)
+    let body_bytes = to_bytes(body.into_body(), std::usize::MAX)
         .await
         .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
 
     let info: InfoResponse = serde_json::from_slice(&body_bytes)
         .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
 
-    let (model_provider_name, model_name) = info
-        .model_id
+    let (model_provider_name, model_name) = info.data[0]
+        .id
         .split_once("/")
-        // Necessary to prevent that if the split fails for some reason as e.g. the `model_id` is
-        // internally set to a path, then the original `model_id` information is preserved and
+        // Necessary to prevent that if the split fails for some reason as e.g. the `id` is
+        // internally set to a path, then the original `id` information is preserved and
         // returned even if "not correct"
-        .unwrap_or((&info.model_id, &info.model_id));
+        .unwrap_or((&info.data[0].id, &info.data[0].id));
 
     Ok(Json(AzureInfoResponse {
         model_name: model_name.to_string(),
