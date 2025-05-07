@@ -1,6 +1,7 @@
 use crate::{
     errors::AzureError,
     proxy::ProxyState,
+    schemas::{AzureInfoResponse, InfoResponse, ModelType},
     utils::{append_path_to_uri, check_api_version},
 };
 use axum::{
@@ -9,36 +10,6 @@ use axum::{
     http::StatusCode,
     response::{IntoResponse, Json},
 };
-use serde::{Deserialize, Serialize};
-
-#[derive(Serialize, Deserialize, Debug)]
-struct ModelInfo {
-    id: String,
-}
-
-#[derive(Deserialize, Debug)]
-struct InfoResponse {
-    data: Vec<ModelInfo>,
-}
-
-// Reference: https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-model-info/get-model-info?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#modeltype
-#[derive(Serialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-enum ModelType {
-    /// A model capable of taking chat-formatted messages and generate responses
-    ChatCompletion,
-
-    /// A model capable of generating embeddings from a text
-    #[allow(unused)]
-    Embeddings,
-}
-
-#[derive(Serialize, Debug)]
-pub struct AzureInfoResponse {
-    model_name: String,
-    model_type: ModelType,
-    model_provider_name: String,
-}
 
 pub async fn info_handler(
     State(state): State<ProxyState>,
