@@ -31,5 +31,10 @@ pub fn check_api_version(query: Option<&str>) -> Result<(), AzureError> {
 pub fn append_path_to_uri(uri: Uri, path: &str) -> Uri {
     let mut parts = uri.into_parts();
     parts.path_and_query = Some(path.parse().unwrap());
+
+    if parts.scheme.is_none() {
+        parts.scheme = Some("http".parse().unwrap());
+    };
+
     Uri::from_parts(parts).unwrap()
 }

@@ -37,6 +37,7 @@ pub async fn start_server(
         .init();
 
     let client: HttpClient = Client::builder(TokioExecutor::new()).build(HttpConnector::new());
+
     let uri: Uri = {
         let port_str = upstream_port.map(|p| format!(":{p}")).unwrap_or_default();
         let full_uri = format!("{}{}", upstream_host, port_str);
