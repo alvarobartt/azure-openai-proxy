@@ -29,7 +29,7 @@ pub fn check_api_version(query: Option<&str>) -> Result<(), AzureError> {
 
 /// Function to append a path (route) to an URI
 pub fn append_path_to_uri(uri: Uri, path: &str) -> Uri {
-    let mut uri = uri.to_string();
-    uri.push_str(path);
-    Uri::try_from(uri).unwrap()
+    let mut parts = uri.into_parts();
+    parts.path_and_query = Some(path.parse().unwrap());
+    Uri::from_parts(parts).unwrap()
 }

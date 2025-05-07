@@ -22,7 +22,7 @@ pub async fn chat_completions_handler(
     check_api_version(req.uri().query())?;
 
     // Updates the request URI whilst keeping the headers, parameters, etc.
-    *req.uri_mut() = append_path_to_uri(state.uri, "v1/chat/completions");
+    *req.uri_mut() = append_path_to_uri(state.uri, "/v1/chat/completions");
     tracing::info!("Now the query contains: {:?}", req.uri().query());
 
     // Forwards request to the underlying upstream API
