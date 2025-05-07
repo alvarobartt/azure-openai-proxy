@@ -34,7 +34,7 @@ proper signal handling.
 ```bash
 git clone git@github.com:alvarobartt/openai-azure-proxy.git
 cd openai-azure-proxy/
-docker build --platform=linux/amd64 -t text-generation-inference-azure:latest -f Dockerfile .
+docker build --platform=linux/amd64 --target tgi -t text-generation-inference-azure:latest -f Dockerfile .
 ```
 
 > [!NOTE]
