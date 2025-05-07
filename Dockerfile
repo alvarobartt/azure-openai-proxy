@@ -27,3 +27,11 @@ COPY --from=builder /app/target/release/openai-azure-proxy /usr/local/bin/openai
 COPY tgi-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
+
+FROM vllm/vllm-openai:v0.8.5.post1 as vllm
+
+COPY --from=builder /app/target/release/openai-azure-proxy /usr/local/bin/openai-azure-proxy
+
+COPY vllm-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
