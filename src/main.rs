@@ -25,6 +25,7 @@ use clap::Parser;
 mod errors;
 mod handlers;
 mod proxy;
+mod schemas;
 mod utils;
 
 use proxy::start_server;
