@@ -21,6 +21,19 @@ pub enum ChatRequestMessage {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "lowercase")]
+pub enum ChatCompletionsModality {
+    Text,
+    Audio,
+}
+
+impl ChatCompletionsModality {
+    fn default() -> Option<Vec<Self>> {
+        Some(vec![ChatCompletionsModality::Text])
+    }
+}
+
+#[derive(Serialize, Deserialize, Debug)]
 pub struct ChatRequest {
     /// ID of the specific AI model to use, if more than one model is available on the endpoint.
     #[serde(skip_serializing_if = "Option::is_none")]
@@ -46,7 +59,8 @@ pub struct ChatRequest {
     /// The modalities that the model is allowed to use for the chat completions response. The
     /// default modality is text. Indicating an unsupported modality combination results in an 422
     /// error.
-    // modalities: Option<Vec<ChatCompletionsModality>>,
+    #[serde(default = "ChatCompletionsModality::default")]
+    modalities: Option<Vec<ChatCompletionsModality>>,
 
     /// A value that influences the probability of generated tokens appearing based on their
     /// existing presence in generated text. Positive values will make tokens less likely to appear
