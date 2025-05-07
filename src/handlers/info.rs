@@ -23,13 +23,14 @@ struct InfoResponse {
 enum ModelType {
     /// A model capable of taking chat-formatted messages and generate responses
     ChatCompletion,
+
     /// A model capable of generating embeddings from a text
     #[allow(unused)]
     Embeddings,
 }
 
 #[derive(Serialize, Debug)]
-struct AzureInfoResponse {
+pub struct AzureInfoResponse {
     model_name: String,
     model_type: ModelType,
     model_provider_name: String,
@@ -38,7 +39,7 @@ struct AzureInfoResponse {
 pub async fn info_handler(
     State(state): State<ProxyState>,
     mut req: Request<Body>,
-) -> Result<impl IntoResponse, AzureError> {
+) -> Result<Json<AzureInfoResponse>, AzureError> {
     // Checks that the `api-version` query parameter is provided and valid
     check_api_version(req.uri().query())?;
 
@@ -70,11 +71,9 @@ pub async fn info_handler(
         // returned even if "not correct"
         .unwrap_or((&info.model_id, &info.model_id));
 
-    let info = AzureInfoResponse {
+    Ok(Json(AzureInfoResponse {
         model_name: model_name.to_string(),
         model_type: ModelType::ChatCompletion,
         model_provider_name: model_provider_name.to_string(),
-    };
-
-    Ok(Json(info).into_response())
+    }))
 }
