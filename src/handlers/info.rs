@@ -16,7 +16,7 @@ struct ModelInfo {
     id: String,
 }
 
-#[derive(Serialize, Deserialize, Debug)]
+#[derive(Deserialize, Debug)]
 struct InfoResponse {
     data: Vec<ModelInfo>,
 }
@@ -48,7 +48,7 @@ pub async fn info_handler(
     check_api_version(req.uri().query())?;
 
     // Updates the request URI whilst keeping the headers, parameters, etc.
-    *req.uri_mut() = append_path_to_uri(state.uri, "/info");
+    *req.uri_mut() = append_path_to_uri(state.uri, "/v1/models");
 
     // Forwards request to the underlying upstream API
     tracing::info!("Proxying {} request to {}", req.method(), req.uri());
