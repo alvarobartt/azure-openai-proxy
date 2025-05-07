@@ -21,7 +21,7 @@ pub enum ChatRequestMessage {
 }
 
 #[derive(Serialize, Deserialize, Debug)]
-struct ChatRequestInput {
+pub struct ChatRequest {
     /// ID of the specific AI model to use, if more than one model is available on the endpoint.
     #[serde(skip_serializing_if = "Option::is_none")]
     model: Option<String>,
@@ -86,7 +86,7 @@ struct ChatRequestInput {
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
     // TODO(missing): response_format and tool_choice
-    // https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#chatcompletionsoptions}
+    // https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#chatcompletionsoptions
 }
 
 #[cfg(test)]
@@ -104,7 +104,7 @@ mod tests {
             ]
         });
 
-        let input: ChatRequestInput = serde_json::from_value(payload.clone()).unwrap();
+        let input: ChatRequest = serde_json::from_value(payload.clone()).unwrap();
         assert_eq!(input.messages.len(), 3);
 
         let serialized = serde_json::to_value(input).unwrap();
