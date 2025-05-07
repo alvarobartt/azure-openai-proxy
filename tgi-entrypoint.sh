@@ -20,7 +20,7 @@ UPSTREAM_PORT="${UPSTREAM_PORT:-8080}"
 # and that only one of `PORT`, `UPSTREAM_PORT` or `-p/--port` is set
 if [[ -n "$UPSTREAM_PORT" ]]; then
     if [[ "$UPSTREAM_PORT" -eq 80 ]]; then
-        echo "ERROR: UPSTREAM_PORT environment variable cannot be set to 80 when running text-generation-inference with Docker, as the port 80 is reserved for the openai-azure-proxy service."
+        echo "ERROR: UPSTREAM_PORT environment variable cannot be set to 80 when running text-generation-inference with Docker, as the port 80 is reserved for the openai-azure-proxy service. Use another port as e.g. 8080, since 80 is the default port for TGI, but that leads to conflicts in this scenario."
         exit 1
     fi
     UPSTREAM_PORT=$UPSTREAM_PORT
