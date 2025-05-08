@@ -1,5 +1,11 @@
 use serde::{Deserialize, Serialize};
 
+#[derive(Deserialize, Debug)]
+pub struct QueryParameters {
+    #[allow(unused)]
+    pub api_version: String,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ModelInfo {
     pub id: String,
@@ -130,6 +136,13 @@ pub struct ChatRequest {
     temperature: Option<f32>,
     // TODO(missing): response_format and tool_choice
     // https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#chatcompletionsoptions
+}
+
+impl Into<axum::body::Body> for ChatRequest {
+    fn into(self) -> axum::body::Body {
+        let bytes = serde_json::to_vec(&self).unwrap();
+        axum::body::Body::from(bytes)
+    }
 }
 
 #[cfg(test)]
