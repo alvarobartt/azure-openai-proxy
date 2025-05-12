@@ -2,7 +2,7 @@ use crate::{
     errors::AzureError,
     proxy::ProxyState,
     schemas::{ChatRequest, QueryParameters},
-    utils::append_path_to_uri,
+    utils::{append_path_to_uri, check_api_version},
 };
 use axum::{
     body::Body,
@@ -23,9 +23,7 @@ pub async fn chat_completions_handler(
     Json(payload): Json<ChatRequest>,
 ) -> Result<impl IntoResponse, AzureError> {
     // Checks that the `api-version` query parameter is provided and valid
-    // check_api_version(parameters.api_version)?;
-    tracing::info!("query contains {:?}", query);
-    tracing::info!("headers contains {:?}", headers);
+    check_api_version(query.api_version)?;
 
     // Updates the request URI whilst keeping the headers, parameters, etc.
     let uri = append_path_to_uri(state.uri, "/v1/chat/completions");

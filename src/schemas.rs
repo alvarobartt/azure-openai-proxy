@@ -2,8 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
 pub struct QueryParameters {
-    #[allow(unused)]
-    pub api_version: String,
+    pub api_version: Option<String>,
 }
 
 #[derive(Serialize, Deserialize, Debug)]

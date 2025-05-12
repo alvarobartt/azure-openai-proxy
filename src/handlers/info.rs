@@ -2,7 +2,7 @@ use crate::{
     errors::AzureError,
     proxy::ProxyState,
     schemas::{AzureInfoResponse, InfoResponse, ModelType},
-    utils::{append_path_to_uri, check_api_version},
+    utils::append_path_to_uri, // check_api_version
 };
 use axum::{
     body::{to_bytes, Body},
@@ -16,7 +16,7 @@ pub async fn info_handler(
     mut req: Request<Body>,
 ) -> Result<Json<AzureInfoResponse>, AzureError> {
     // Checks that the `api-version` query parameter is provided and valid
-    check_api_version(req.uri().query())?;
+    // check_api_version(req.uri().query())?;
 
     // Updates the request URI whilst keeping the headers, parameters, etc.
     *req.uri_mut() = append_path_to_uri(state.uri, "/v1/models");
