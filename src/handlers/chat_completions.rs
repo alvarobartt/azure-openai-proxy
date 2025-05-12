@@ -44,6 +44,7 @@ pub async fn chat_completions_handler(
     );
     let payload = ChatRequest::from_str(body.as_str(), extra_parameters)
         .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
+    tracing::debug!("Body parsed as JSON as {:?}", payload);
 
     // Updates the request URI whilst keeping the headers, parameters, etc.
     let uri = append_path_to_uri(state.uri, "/v1/chat/completions");

@@ -46,6 +46,7 @@ pub async fn start_server(
 
     let state = ProxyState { client, uri };
 
+    // TODO(env): use env to control which routes should be exposed
     let app = Router::new()
         .route("/info", get(info_handler))
         .route("/chat/completions", post(chat_completions_handler))
