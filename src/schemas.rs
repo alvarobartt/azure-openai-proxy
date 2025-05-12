@@ -158,8 +158,8 @@ pub struct ChatRequest {
     /// contains the value `pass-through`, meaning that the extra parameters within the payload
     /// won't be ignored (default `serde` behavior), but rather kept and passed through to the
     /// underlying API
-    #[serde(flatten, skip_serializing_if = "Option::is_none")]
-    pub extra_parameters: Option<HashMap<String, serde_json::Value>>,
+    #[serde(flatten, skip_serializing_if = "HashMap::is_empty")]
+    pub extra_parameters: HashMap<String, serde_json::Value>,
 }
 
 impl Into<axum::body::Body> for ChatRequest {
@@ -178,19 +178,23 @@ impl ChatRequest {
 
         match extra_parameters {
             ExtraParameters::Error => {
-                if let Some(extra) = &payload.extra_parameters {
-                    if !extra.is_empty() {
-                        let fields = extra.keys().cloned().collect::<Vec<_>>().join(",");
-                        return Err(serde::de::Error::custom(format!(
-                            "As the header `extra-parameters` is set to `error`, since the following parameters have been provided {}, and those are not defined within the Azure AI Model Inference API specification have been provided, the request failed!",
-                            fields
-                        )));
-                    }
+                if payload.extra_parameters.is_empty() {
+                    let fields = payload
+                        .extra_parameters
+                        .keys()
+                        .cloned()
+                        .collect::<Vec<_>>()
+                        .join(",");
+
+                    return Err(serde::de::Error::custom(format!(
+                        "As the header `extra-parameters` is set to `error`, since the following parameters have been provided {}, and those are not defined within the Azure AI Model Inference API specification have been provided, the request failed!",
+                        fields
+                    )));
                 }
-                payload.extra_parameters = None;
+                payload.extra_parameters = HashMap::new();
             }
             ExtraParameters::Drop => {
-                payload.extra_parameters = None;
+                payload.extra_parameters = HashMap::new();
             }
             ExtraParameters::PassThrough => (),
         }
