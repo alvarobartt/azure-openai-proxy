@@ -1,9 +1,26 @@
 use serde::{Deserialize, Serialize};
+use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
 pub struct QueryParameters {
     #[serde(rename = "api-version")]
     pub api_version: Option<String>,
+}
+
+/// https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#extraparameters
+#[derive(Serialize, Deserialize, Debug)]
+#[serde(rename_all = "kebab-case")]
+pub enum ExtraParameters {
+    /// The service will pass extra parameters to the back-end AI model.
+    PassThrough,
+
+    /// The service will ignore (drop) extra parameters in the request payload. It will only pass
+    /// the known parameters to the back-end AI model.
+    Drop,
+
+    /// The service will error if it detected extra parameters in the request payload. This is the
+    /// service default.
+    Error,
 }
 
 #[derive(Serialize, Deserialize, Debug)]
@@ -137,12 +154,47 @@ pub struct ChatRequest {
     temperature: Option<f32>,
     // TODO(missing): response_format and tool_choice
     // https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#chatcompletionsoptions
+    /// Placeholder for the extra parameters to be provided if the `extra-parameters` header
+    /// contains the value `pass-through`, meaning that the extra parameters within the payload
+    /// won't be ignored (default `serde` behavior), but rather kept and passed through to the
+    /// underlying API
+    #[serde(flatten, skip_serializing_if = "Option::is_none")]
+    pub extra_parameters: Option<HashMap<String, serde_json::Value>>,
 }
 
 impl Into<axum::body::Body> for ChatRequest {
     fn into(self) -> axum::body::Body {
         let bytes = serde_json::to_vec(&self).unwrap();
         axum::body::Body::from(bytes)
+    }
+}
+
+impl ChatRequest {
+    pub fn from_str(
+        value: &str,
+        extra_parameters: ExtraParameters,
+    ) -> Result<Self, serde_json::Error> {
+        let mut payload: Self = serde_json::from_str(value)?;
+
+        match extra_parameters {
+            ExtraParameters::Error => {
+                if let Some(extra) = &payload.extra_parameters {
+                    if !extra.is_empty() {
+                        let fields = extra.keys().cloned().collect::<Vec<_>>().join(",");
+                        return Err(serde::de::Error::custom(format!(
+                            "As the header `extra-parameters` is set to `error`, since the following parameters have been provided {}, and those are not defined within the Azure AI Model Inference API specification have been provided, the request failed!",
+                            fields
+                        )));
+                    }
+                }
+                payload.extra_parameters = None;
+            }
+            ExtraParameters::Drop => {
+                payload.extra_parameters = None;
+            }
+            ExtraParameters::PassThrough => (),
+        }
+        Ok(payload)
     }
 }
 

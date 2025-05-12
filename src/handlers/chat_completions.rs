@@ -1,3 +1,4 @@
+use crate::schemas::ExtraParameters;
 use crate::{
     errors::AzureError,
     proxy::ProxyState,
@@ -6,7 +7,7 @@ use crate::{
 };
 use axum::{
     body::Body,
-    extract::{Json, Query, Request, State},
+    extract::{Query, Request, State},
     http::{HeaderMap, Method, StatusCode},
     response::IntoResponse,
 };
@@ -20,10 +21,21 @@ pub async fn chat_completions_handler(
     headers: HeaderMap,
     Query(query): Query<QueryParameters>,
     State(state): State<ProxyState>,
-    Json(payload): Json<ChatRequest>,
+    body: String,
 ) -> Result<impl IntoResponse, AzureError> {
     // Checks that the `api-version` query parameter is provided and valid
     check_api_version(query.api_version)?;
+
+    // Checks if the `extra-parameters` header is there, and applies the necessary filtering to
+    // the payload to be forwarded to the underlying API
+    let extra_parameters: ExtraParameters = headers
+        .get("extra-parameters")
+        .and_then(|value| value.to_str().ok())
+        .map(|s| serde_json::from_str::<ExtraParameters>(s).unwrap_or(ExtraParameters::PassThrough))
+        .unwrap_or(ExtraParameters::PassThrough);
+
+    let payload = ChatRequest::from_str(body.as_str(), extra_parameters)
+        .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
 
     // Updates the request URI whilst keeping the headers, parameters, etc.
     let uri = append_path_to_uri(state.uri, "/v1/chat/completions");
