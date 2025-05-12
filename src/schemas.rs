@@ -2,6 +2,7 @@ use serde::{Deserialize, Serialize};
 
 #[derive(Deserialize, Debug)]
 pub struct QueryParameters {
+    #[serde(rename = "api-version")]
     pub api_version: Option<String>,
 }
 
@@ -93,7 +94,8 @@ pub struct ChatRequest {
     /// The modalities that the model is allowed to use for the chat completions response. The
     /// default modality is text. Indicating an unsupported modality combination results in an 422
     /// error.
-    #[serde(default = "ChatCompletionsModality::default")]
+    #[allow(unused)]
+    #[serde(skip_serializing, default = "ChatCompletionsModality::default")]
     modalities: Option<Vec<ChatCompletionsModality>>,
 
     /// A value that influences the probability of generated tokens appearing based on their
