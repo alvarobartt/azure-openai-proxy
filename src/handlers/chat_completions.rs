@@ -31,9 +31,17 @@ pub async fn chat_completions_handler(
     let extra_parameters: ExtraParameters = headers
         .get("extra-parameters")
         .and_then(|value| value.to_str().ok())
-        .map(|s| serde_json::from_str::<ExtraParameters>(s).unwrap_or(ExtraParameters::PassThrough))
+        .map(|s| {
+            serde_json::from_str::<ExtraParameters>(&format!("\"{}\"", s))
+                .unwrap_or(ExtraParameters::PassThrough)
+        })
         .unwrap_or(ExtraParameters::PassThrough);
 
+    tracing::debug!(
+        "Reading body {:?} with extra-parameters {:?}",
+        body,
+        extra_parameters
+    );
     let payload = ChatRequest::from_str(body.as_str(), extra_parameters)
         .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
 
