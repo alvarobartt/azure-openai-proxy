@@ -1,28 +1,40 @@
 use crate::{
     errors::AzureError,
     proxy::ProxyState,
-    schemas::{AzureInfoResponse, InfoResponse, ModelType},
-    utils::append_path_to_uri, // check_api_version
+    schemas::{AzureInfoResponse, InfoResponse, ModelType, QueryParameters},
+    utils::{append_path_to_uri, check_api_version},
 };
 use axum::{
     body::{to_bytes, Body},
-    extract::{Request, State},
-    http::StatusCode,
+    extract::{Query, Request, State},
+    http::{HeaderMap, Method, StatusCode},
     response::{IntoResponse, Json},
 };
 
 pub async fn info_handler(
+    method: Method,
+    headers: HeaderMap,
+    Query(query): Query<QueryParameters>,
     State(state): State<ProxyState>,
-    mut req: Request<Body>,
 ) -> Result<Json<AzureInfoResponse>, AzureError> {
     // Checks that the `api-version` query parameter is provided and valid
-    // check_api_version(req.uri().query())?;
+    check_api_version(query.api_version)?;
 
     // Updates the request URI whilst keeping the headers, parameters, etc.
-    *req.uri_mut() = append_path_to_uri(state.uri, "/v1/models");
+    let uri = append_path_to_uri(state.uri, "/v1/chat/completions");
 
     // Forwards request to the underlying upstream API
-    tracing::info!("Proxying {} request to {}", req.method(), req.uri());
+    tracing::info!("Proxying {} request to {}", method, uri);
+
+    // Build request again preserving the method, body and headers
+    let mut req: Request<Body> = Request::builder()
+        .method(method)
+        .uri(uri)
+        .body(Body::empty())
+        .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
+
+    *req.headers_mut() = headers;
+
     let body = state
         .client
         .request(req)
