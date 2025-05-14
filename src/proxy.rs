@@ -1,4 +1,6 @@
-use crate::handlers::{chat_completions::chat_completions_handler, info::info_handler};
+use crate::handlers::{
+    chat_completions::chat_completions_handler, health::health_handler, info::info_handler,
+};
 use axum::{
     body::Body,
     http::Uri,
@@ -48,6 +50,7 @@ pub async fn start_server(
 
     // TODO(env): use env to control which routes should be exposed
     let app = Router::new()
+        .route("/health", get(health_handler))
         .route("/info", get(info_handler))
         .route("/chat/completions", post(chat_completions_handler))
         .with_state(state);
