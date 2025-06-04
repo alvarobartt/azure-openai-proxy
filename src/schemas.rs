@@ -1,4 +1,5 @@
-use serde::{Deserialize, Serialize};
+use serde::de::{self, MapAccess, Unexpected, Visitor};
+use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
 #[derive(Deserialize, Debug)]
@@ -122,13 +123,51 @@ impl ChatCompletionsModality {
     }
 }
 
-#[derive(Debug, Serialize, Deserialize)]
-#[serde(untagged)]
+#[derive(Debug, Serialize)]
 pub enum ToolChoice {
     None,
     Auto,
     Required,
     Function(FunctionTool),
+}
+
+impl<'de> Deserialize<'de> for ToolChoice {
+    fn deserialize<D>(deserializer: D) -> Result<Self, D::Error>
+    where
+        D: Deserializer<'de>,
+    {
+        struct ToolChoiceVisitor;
+
+        impl<'de> Visitor<'de> for ToolChoiceVisitor {
+            type Value = ToolChoice;
+
+            fn expecting(&self, formatter: &mut std::fmt::Formatter) -> std::fmt::Result {
+                formatter.write_str(r#""none", "auto", "required", or a function tool object"#)
+            }
+
+            fn visit_str<E>(self, value: &str) -> Result<ToolChoice, E>
+            where
+                E: de::Error,
+            {
+                match value {
+                    "none" => Ok(ToolChoice::None),
+                    "auto" => Ok(ToolChoice::Auto),
+                    "required" => Ok(ToolChoice::Required),
+                    _ => Err(de::Error::invalid_value(Unexpected::Str(value), &self)),
+                }
+            }
+
+            fn visit_map<M>(self, map: M) -> Result<ToolChoice, M::Error>
+            where
+                M: MapAccess<'de>,
+            {
+                let tool = FunctionTool::deserialize(de::value::MapAccessDeserializer::new(map))?;
+                Ok(ToolChoice::Function(tool))
+            }
+        }
+
+        deserializer.deserialize_any(ToolChoiceVisitor)
+    }
 }
 
 #[derive(Debug, Serialize, Deserialize)]
@@ -227,8 +266,6 @@ pub struct ChatRequest {
 
     /// If specified, the model will configure which of the provided tools it can use for the chat
     /// completions response.
-    /// NOTE: it does not have a pre-defined type in the API Reference
-    /// https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2024-05-01-preview&viewFallbackFrom=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#chatcompletionsoptions
     #[serde(skip_serializing_if = "Option::is_none")]
     tool_choice: Option<ToolChoice>,
 
@@ -243,6 +280,10 @@ pub struct ChatRequest {
 impl Into<axum::body::Body> for ChatRequest {
     fn into(self) -> axum::body::Body {
         let bytes = serde_json::to_vec(&self).unwrap();
+        tracing::debug!(
+            "Serialized ChatRequest JSON: {}",
+            String::from_utf8_lossy(&bytes)
+        );
         axum::body::Body::from(bytes)
     }
 }
@@ -252,9 +293,7 @@ impl ChatRequest {
         value: &str,
         extra_parameters: ExtraParameters,
     ) -> Result<Self, serde_json::Error> {
-        tracing::debug!("Str value contains {:?}", value);
         let mut payload: Self = serde_json::from_str(value)?;
-        tracing::debug!("Payload contains {:?}", payload);
 
         match extra_parameters {
             ExtraParameters::Error => {
