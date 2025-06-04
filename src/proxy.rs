@@ -49,6 +49,8 @@ pub async fn start_server(
     let state = ProxyState { client, uri };
 
     // TODO(env): use env to control which routes should be exposed
+    // TODO: add periodic health checks to the underlying service to terminate the proxy if the
+    // underlying service is down
     let app = Router::new()
         .route("/health", get(health_handler))
         .route("/info", get(info_handler))
