@@ -201,6 +201,7 @@ pub struct ChatRequest {
     /// seemingly "stuck" request. Also note that the message content may be partially cut off if
     /// finish_reason="length", which indicates the generation exceeded max_tokens or the
     /// conversation exceeded the max context length.
+    #[serde(skip_serializing_if = "Option::is_none")]
     response_format: Option<ChatCompletionsResponseFormat>,
 
     /// If specified, the model will configure which of the provided tools it can use for the chat
