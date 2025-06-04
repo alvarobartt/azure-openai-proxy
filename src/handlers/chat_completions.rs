@@ -8,7 +8,10 @@ use crate::{
 use axum::{
     body::Body,
     extract::{Query, Request, State},
-    http::{HeaderMap, Method, StatusCode},
+    http::{
+        header::{CONNECTION, CONTENT_LENGTH, TRANSFER_ENCODING},
+        HeaderMap, Method, StatusCode,
+    },
     response::IntoResponse,
 };
 
@@ -18,7 +21,7 @@ use axum::{
 /// proxies the request to `/v1/chat/completions`.
 pub async fn chat_completions_handler(
     method: Method,
-    headers: HeaderMap,
+    mut headers: HeaderMap,
     Query(query): Query<QueryParameters>,
     State(state): State<ProxyState>,
     body: String,
@@ -36,6 +39,14 @@ pub async fn chat_completions_handler(
                 .unwrap_or(ExtraParameters::PassThrough)
         })
         .unwrap_or(ExtraParameters::PassThrough);
+
+    // If `extra-parameters` exists, then remove it as there's no need to forward it
+    headers.remove("extra-parameters");
+    // And, also remove the headers: CONNECTION, CONTENT_LENGTH, and TRANSFER_ENCODING, to prevent
+    // issues when forwarding the request, the HTTP client will automatically recalculate those
+    headers.remove(CONNECTION);
+    headers.remove(CONTENT_LENGTH);
+    headers.remove(TRANSFER_ENCODING);
 
     tracing::debug!(
         "Reading body {:?} with extra-parameters {:?}",
@@ -58,7 +69,6 @@ pub async fn chat_completions_handler(
         .uri(uri)
         .body(payload.into())
         .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
-
     *req.headers_mut() = headers;
 
     state
