@@ -122,6 +122,27 @@ impl ChatCompletionsModality {
     }
 }
 
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(untagged)]
+pub enum ToolChoice {
+    None,
+    Auto,
+    Required,
+    Function(FunctionTool),
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FunctionTool {
+    #[serde(rename = "type")]
+    tool_type: String,
+    function: FunctionSpec,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FunctionSpec {
+    name: String,
+}
+
 #[derive(Serialize, Deserialize, Debug)]
 pub struct ChatRequest {
     /// ID of the specific AI model to use, if more than one model is available on the endpoint.
@@ -209,7 +230,7 @@ pub struct ChatRequest {
     /// NOTE: it does not have a pre-defined type in the API Reference
     /// https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2024-05-01-preview&viewFallbackFrom=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#chatcompletionsoptions
     #[serde(skip_serializing_if = "Option::is_none")]
-    tool_choice: Option<Vec<String>>,
+    tool_choice: Option<ToolChoice>,
 
     /// Placeholder for the extra parameters to be provided if the `extra-parameters` header
     /// contains the value `pass-through`, meaning that the extra parameters within the payload
@@ -231,7 +252,9 @@ impl ChatRequest {
         value: &str,
         extra_parameters: ExtraParameters,
     ) -> Result<Self, serde_json::Error> {
+        tracing::debug!("Str value contains {:?}", value);
         let mut payload: Self = serde_json::from_str(value)?;
+        tracing::debug!("Payload contains {:?}", payload);
 
         match extra_parameters {
             ExtraParameters::Error => {
