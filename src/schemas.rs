@@ -53,6 +53,30 @@ pub struct AzureInfoResponse {
 }
 
 #[derive(Debug, Serialize, Deserialize)]
+pub struct ChatRequestAudioReference {
+    id: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FunctionCall {
+    arguments: String,
+    name: String,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+pub struct FunctionDefinition {
+    description: String,
+    name: String,
+    parameters: serde_json::Value,
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "lowercase", tag = "type")]
+pub enum ChatCompletionsToolCall {
+    Function { id: String, function: FunctionCall },
+}
+
+#[derive(Debug, Serialize, Deserialize)]
 #[serde(rename_all = "lowercase", tag = "role")]
 pub enum ChatRequestMessage {
     System {
@@ -61,14 +85,27 @@ pub enum ChatRequestMessage {
     User {
         content: String,
     },
-    // TODO(missing): audio and tool_calls
-    // https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#chatrequestassistantmessage
     Assistant {
+        audio: Option<ChatRequestAudioReference>,
         content: String,
+        tool_calls: Option<Vec<ChatCompletionsToolCall>>,
     },
     Tool {
         content: String,
         tool_call_id: String,
+    },
+}
+
+#[derive(Debug, Serialize, Deserialize)]
+#[serde(rename_all = "snake_case", tag = "type")]
+pub enum ChatCompletionsResponseFormat {
+    Text,
+    JsonObject,
+    JsonSchema {
+        description: String,
+        name: String,
+        schema: serde_json::Value,
+        strict: bool,
     },
 }
 
@@ -152,8 +189,27 @@ pub struct ChatRequest {
     /// difficult to predict. Supported range is [0, 1].
     #[serde(skip_serializing_if = "Option::is_none")]
     temperature: Option<f32>,
-    // TODO(missing): response_format and tool_choice
-    // https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#chatcompletionsoptions
+
+    /// An object specifying the format that the model must output.
+    /// - Setting to { "type": "json_schema", "json_schema": {...} } enables Structured Outputs
+    ///   which ensures the model will match your supplied JSON schema.
+    /// - Setting to { "type": "json_object" } enables JSON mode, which ensures the message the
+    ///   model generates is valid JSON.
+    /// Important: when using JSON mode, you must also instruct the model to produce JSON yourself
+    /// via a system or user message. Without this, the model may generate an unending stream of
+    /// whitespace until the generation reaches the token limit, resulting in a long-running and
+    /// seemingly "stuck" request. Also note that the message content may be partially cut off if
+    /// finish_reason="length", which indicates the generation exceeded max_tokens or the
+    /// conversation exceeded the max context length.
+    response_format: Option<ChatCompletionsResponseFormat>,
+
+    /// If specified, the model will configure which of the provided tools it can use for the chat
+    /// completions response.
+    /// NOTE: it does not have a pre-defined type in the API Reference
+    /// https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2024-05-01-preview&viewFallbackFrom=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#chatcompletionsoptions
+    #[serde(skip_serializing_if = "Option::is_none")]
+    tool_choice: Option<Vec<String>>,
+
     /// Placeholder for the extra parameters to be provided if the `extra-parameters` header
     /// contains the value `pass-through`, meaning that the extra parameters within the payload
     /// won't be ignored (default `serde` behavior), but rather kept and passed through to the
