@@ -34,7 +34,15 @@ proper signal handling.
 ```bash
 git clone git@github.com:alvarobartt/openai-azure-proxy.git
 cd openai-azure-proxy/
-docker build --platform=linux/amd64 --target tgi -t text-generation-inference-azure:latest -f Dockerfile .
+docker build --platform=linux/amd64 --target tgi -t huggingface-azure-tgi:3.2.3 -f Dockerfile .
+```
+
+Note that also the [SGLang](https://github.com/sgl-project/sglang) and [vLLM](https://github.com/vllm-project/vllm)
+backends have a target defined within the `Dockerfile`, as well as their respective entrypoint, to be built as:
+
+```bash
+docker build --platform=linux/amd64 --target sglang -t huggingface-azure-sglang:v0.4.6.post2-cu124 -f Dockerfile .
+docker build --platform=linux/amd64 --target vllm -t huggingface-azure-vllm:v0.8.5.post1 -f Dockerfile .
 ```
 
 > [!NOTE]
@@ -48,11 +56,41 @@ then run the container as follows:
 ```bash
 docker run \
     --gpus all \
+    --shm-size 1g \
     -p 80:80 \
-    -p 8080:8080 \
     -e UPSTREAM_PORT=8080 \
-    text-generation-inference-azure:latest \
+    -v ~/.cache/huggingface:/data \
+    huggingface-azure-tgi:3.2.3 \
     --model-id TinyLlama/TinyLlama-1.1B-Chat-v1.0
+```
+
+Or SGLang as follows:
+
+```bash
+docker run \
+    --ipc host \
+    --gpus all \
+    --shm-size 1g \
+    -p 80:80 \
+    -e UPSTREAM_PORT=30000 \
+    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    huggingface-azure-sglang:v0.4.6.post2-cu124 \
+    --model-path TinyLlama/TinyLlama-1.1B-Chat-v1.0
+```
+
+Or vLLM as follows:
+
+```bash
+docker run \
+    --ipc host \
+    --gpus all \
+    --runtime nvidia \
+    --shm-size 1g \
+    -p 80:80 \
+    -e UPSTREAM_PORT=8000 \
+    -v ~/.cache/huggingface:/root/.cache/huggingface \
+    huggingface-azure-vllm:v0.8.5.post1 \
+    --model TinyLlama/TinyLlama-1.1B-Chat-v1.0
 ```
 
 Finally, you should be able to send requests in an Azure AI Model Inference compatible manner to the
@@ -87,6 +125,8 @@ response = client.complete(
 )
 ```
 
+Find more examples at [`examples/`](examples/).
+
 > [!NOTE]
 > If deployed within Azure infrastructure, you should replace the "http://localhost"
 > with the actual endpoint URI and the required credentials.
@@ -103,7 +143,7 @@ Then you can easily run it and connect it to a running OpenAI-compatible server 
 exposes the `/v1/chat/completions` endpoint:
 
 ```bash
-openai-azure-proxy --upstream-host https://api.openai.com
+openai-azure-proxy --upstream-host https://api.openai.com --upstream-port 80
 ```
 
 For more information check the `--help`:
