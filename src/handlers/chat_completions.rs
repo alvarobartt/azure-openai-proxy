@@ -7,13 +7,14 @@ use crate::{
 };
 use axum::{
     body::Body,
-    extract::{Query, Request, State},
+    extract::{Json, Query, Request, State},
     http::{
         header::{CONNECTION, CONTENT_LENGTH, TRANSFER_ENCODING},
         HeaderMap, Method, StatusCode,
     },
     response::IntoResponse,
 };
+use std::collections::HashMap;
 
 /// This function proxies the requests to `/chat/completion` to the underlying `/v1/chat/completion`,
 /// making sure that the I/O schemas are Azure AI compliant. This function handles that the
@@ -24,7 +25,7 @@ pub async fn chat_completions_handler(
     mut headers: HeaderMap,
     Query(query): Query<QueryParameters>,
     State(state): State<ProxyState>,
-    body: String,
+    Json(mut payload): Json<ChatRequest>,
 ) -> Result<impl IntoResponse, AzureError> {
     // Checks that the `api-version` query parameter is provided and valid
     check_api_version(query.api_version)?;
@@ -48,20 +49,34 @@ pub async fn chat_completions_handler(
     headers.remove(CONTENT_LENGTH);
     headers.remove(TRANSFER_ENCODING);
 
-    tracing::debug!(
-        "Reading body {:?} with extra-parameters {:?}",
-        body,
-        extra_parameters
-    );
-    let payload = ChatRequest::from_str(body.as_str(), extra_parameters)
-        .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
-    tracing::debug!("Body parsed as JSON as {:?}", payload);
+    // Based on `extra-parameters` define what to do with the `extra_parameters` field
+    match extra_parameters {
+        ExtraParameters::Drop => {
+            payload.extra_parameters = HashMap::new();
+        }
+        ExtraParameters::Error => {
+            if !payload.extra_parameters.is_empty() {
+                let fields = payload
+                    .extra_parameters
+                    .keys()
+                    .cloned()
+                    .collect::<Vec<_>>()
+                    .join(",");
+
+                return Err(AzureError::InternalParsing(format!(
+                    "As the header `extra-parameters` is set to `error`, since the following parameters have been provided {}, and those are not defined within the Azure AI Model Inference API specification.",
+                    fields
+                )));
+            }
+        }
+        ExtraParameters::PassThrough => (),
+    };
 
     // Updates the request URI whilst keeping the headers, parameters, etc.
     let uri = append_path_to_uri(state.uri, "/v1/chat/completions");
 
     // Forwards request to the underlying upstream API
-    tracing::info!("Proxying {} request to {}", method, uri);
+    tracing::info!("Proxying {} request to {} with {:?}", method, uri, payload);
 
     // Build request again preserving the method, body and headers
     let mut req: Request<Body> = Request::builder()

@@ -288,39 +288,6 @@ impl Into<axum::body::Body> for ChatRequest {
     }
 }
 
-impl ChatRequest {
-    pub fn from_str(
-        value: &str,
-        extra_parameters: ExtraParameters,
-    ) -> Result<Self, serde_json::Error> {
-        let mut payload: Self = serde_json::from_str(value)?;
-
-        match extra_parameters {
-            ExtraParameters::Error => {
-                if payload.extra_parameters.is_empty() {
-                    let fields = payload
-                        .extra_parameters
-                        .keys()
-                        .cloned()
-                        .collect::<Vec<_>>()
-                        .join(",");
-
-                    return Err(serde::de::Error::custom(format!(
-                        "As the header `extra-parameters` is set to `error`, since the following parameters have been provided {}, and those are not defined within the Azure AI Model Inference API specification have been provided, the request failed!",
-                        fields
-                    )));
-                }
-                payload.extra_parameters = HashMap::new();
-            }
-            ExtraParameters::Drop => {
-                payload.extra_parameters = HashMap::new();
-            }
-            ExtraParameters::PassThrough => (),
-        }
-        Ok(payload)
-    }
-}
-
 #[cfg(test)]
 mod tests {
     use super::*;
