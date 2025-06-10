@@ -20,7 +20,7 @@ COPY Cargo.toml Cargo.lock ./
 
 RUN cargo build --release
 
-FROM ghcr.io/huggingface/text-generation-inference:3.2.3 AS tgi
+FROM ghcr.io/huggingface/text-generation-inference:3.3.2 AS tgi
 
 COPY --from=builder /app/target/release/openai-azure-proxy /usr/local/bin/openai-azure-proxy
 
@@ -28,7 +28,7 @@ COPY tgi-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
-FROM lmsysorg/sglang:v0.4.6.post2-cu124 AS sglang
+FROM lmsysorg/sglang:v0.4.6.post5-cu124 AS sglang
 
 COPY --from=builder /app/target/release/openai-azure-proxy /usr/local/bin/openai-azure-proxy
 
@@ -36,7 +36,7 @@ COPY sglang-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
 
-FROM vllm/vllm-openai:v0.8.5.post1 AS vllm
+FROM vllm/vllm-openai:v0.9.0.1 AS vllm
 
 COPY --from=builder /app/target/release/openai-azure-proxy /usr/local/bin/openai-azure-proxy
 
