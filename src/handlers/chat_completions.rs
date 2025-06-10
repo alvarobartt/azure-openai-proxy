@@ -86,6 +86,7 @@ pub async fn chat_completions_handler(
         .uri(uri)
         .body(payload.into())
         .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
+
     *req.headers_mut() = headers;
 
     state
