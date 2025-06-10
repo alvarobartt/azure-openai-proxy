@@ -24,6 +24,7 @@ pub type HttpClient = Client<HttpConnector, Body>;
 pub struct ProxyState {
     pub client: HttpClient,
     pub uri: Uri,
+    pub upstream_type: UpstreamType,
 }
 
 /// Starts the Axum server i.e. the proxy
@@ -50,19 +51,25 @@ pub async fn start_server(
         Uri::try_from(full_uri).unwrap()
     };
 
-    let state = ProxyState { client, uri };
+    let state = ProxyState {
+        client,
+        uri,
+        upstream_type: upstream_type.clone(),
+    };
 
     // TODO: add periodic health checks to the underlying service to terminate the proxy if the
     // underlying service is down
     let app = Router::new()
         .route("/health", get(health_handler))
         .route("/info", get(info_handler));
+
     let app = match upstream_type {
         UpstreamType::ChatCompletions => {
             app.route("/chat/completions", post(chat_completions_handler))
         }
         UpstreamType::Embeddings => app,
     };
+
     let app = app.with_state(state);
 
     let listener = tokio::net::TcpListener::bind(format!(

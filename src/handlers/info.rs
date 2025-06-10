@@ -6,6 +6,7 @@ use crate::{
         info::{InfoResponse, ModelType, OpenAIInfoResponse},
     },
     utils::{append_path_to_uri, check_api_version},
+    UpstreamType,
 };
 use axum::{
     body::{to_bytes, Body},
@@ -61,10 +62,14 @@ pub async fn info_handler(
         // returned even if "not correct"; when working with models from the Hugging Face Hub
         .unwrap_or((&info.data[0].id, &info.data[0].id));
 
+    let model_type = match &state.upstream_type {
+        UpstreamType::ChatCompletions => ModelType::ChatCompletion,
+        UpstreamType::Embeddings => ModelType::Embeddings,
+    };
+
     Ok(Json(InfoResponse {
         model_name: model_name.to_string(),
-        // TODO: based on env variable define whether the model is ChatCompletion or Embeddings
-        model_type: ModelType::ChatCompletion,
+        model_type,
         model_provider_name: model_provider_name.to_string(),
     }))
 }
