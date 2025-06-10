@@ -1,8 +1,10 @@
-use crate::schemas::ExtraParameters;
 use crate::{
     errors::AzureError,
     proxy::ProxyState,
-    schemas::{ChatRequest, QueryParameters},
+    schemas::{
+        azure::{ExtraParameters, QueryParameters},
+        chat_completions::ChatRequest,
+    },
     utils::{append_path_to_uri, check_api_version},
 };
 use axum::{
@@ -16,7 +18,7 @@ use axum::{
 };
 use std::collections::HashMap;
 
-/// This function proxies the requests to `/chat/completion` to the underlying `/v1/chat/completion`,
+/// This function proxies the requests to `/chat/completions` to the underlying `/v1/chat/completions`,
 /// making sure that the I/O schemas are Azure AI compliant. This function handles that the
 /// `api-version` query parameter is provided, builds the URI for the underlying service, and
 /// proxies the request to `/v1/chat/completions`.

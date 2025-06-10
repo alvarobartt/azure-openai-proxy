@@ -2,57 +2,6 @@ use serde::de::{self, MapAccess, Unexpected, Visitor};
 use serde::{Deserialize, Deserializer, Serialize};
 use std::collections::HashMap;
 
-#[derive(Deserialize, Debug)]
-pub struct QueryParameters {
-    #[serde(rename = "api-version")]
-    pub api_version: Option<String>,
-}
-
-/// https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-chat-completions/get-chat-completions?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#extraparameters
-#[derive(Serialize, Deserialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-pub enum ExtraParameters {
-    /// The service will pass extra parameters to the back-end AI model.
-    PassThrough,
-
-    /// The service will ignore (drop) extra parameters in the request payload. It will only pass
-    /// the known parameters to the back-end AI model.
-    Drop,
-
-    /// The service will error if it detected extra parameters in the request payload. This is the
-    /// service default.
-    Error,
-}
-
-#[derive(Serialize, Deserialize, Debug)]
-pub struct ModelInfo {
-    pub id: String,
-}
-
-#[derive(Deserialize, Debug)]
-pub struct InfoResponse {
-    pub data: Vec<ModelInfo>,
-}
-
-/// https://learn.microsoft.com/en-us/rest/api/aifoundry/model-inference/get-model-info/get-model-info?view=rest-aifoundry-model-inference-2025-04-01&tabs=HTTP#modeltype
-#[derive(Serialize, Debug)]
-#[serde(rename_all = "kebab-case")]
-pub enum ModelType {
-    /// A model capable of taking chat-formatted messages and generate responses
-    ChatCompletion,
-
-    /// A model capable of generating embeddings from a text
-    #[allow(unused)]
-    Embeddings,
-}
-
-#[derive(Serialize, Debug)]
-pub struct AzureInfoResponse {
-    pub model_name: String,
-    pub model_type: ModelType,
-    pub model_provider_name: String,
-}
-
 #[derive(Debug, Serialize, Deserialize)]
 pub struct ChatRequestAudioReference {
     id: String,

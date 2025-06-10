@@ -1,7 +1,10 @@
 use crate::{
     errors::AzureError,
     proxy::ProxyState,
-    schemas::{AzureInfoResponse, InfoResponse, ModelType, QueryParameters},
+    schemas::{
+        azure::QueryParameters,
+        info::{AzureInfoResponse, InfoResponse, ModelType},
+    },
     utils::{append_path_to_uri, check_api_version},
 };
 use axum::{
@@ -21,7 +24,7 @@ pub async fn info_handler(
     check_api_version(query.api_version)?;
 
     // Updates the request URI whilst keeping the headers, parameters, etc.
-    let uri = append_path_to_uri(state.uri, "/v1/chat/completions");
+    let uri = append_path_to_uri(state.uri, "/v1/models");
 
     // Forwards request to the underlying upstream API
     tracing::info!("Proxying {} request to {}", method, uri);
