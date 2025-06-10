@@ -43,3 +43,19 @@ COPY --from=builder /app/target/release/openai-azure-proxy /usr/local/bin/openai
 COPY vllm-entrypoint.sh /entrypoint.sh
 RUN chmod +x /entrypoint.sh
 ENTRYPOINT ["/entrypoint.sh"]
+
+FROM ghcr.io/huggingface/text-embeddings-inference:cpu-1.7.1 AS tei-cpu
+
+COPY --from=builder /app/target/release/openai-azure-proxy /usr/local/bin/openai-azure-proxy
+
+COPY tei-cpu-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]
+
+FROM ghcr.io/huggingface/text-embeddings-inference:cuda-1.7.1 AS tei-gpu
+
+COPY --from=builder /app/target/release/openai-azure-proxy /usr/local/bin/openai-azure-proxy
+
+COPY tei-gpu-entrypoint.sh /entrypoint.sh
+RUN chmod +x /entrypoint.sh
+ENTRYPOINT ["/entrypoint.sh"]

@@ -1,6 +1,7 @@
 use crate::{
     handlers::{
-        chat_completions::chat_completions_handler, health::health_handler, info::info_handler,
+        chat_completions::chat_completions_handler, embeddings::embeddings_handler,
+        health::health_handler, info::info_handler,
     },
     UpstreamType,
 };
@@ -67,7 +68,7 @@ pub async fn start_server(
         UpstreamType::ChatCompletions => {
             app.route("/chat/completions", post(chat_completions_handler))
         }
-        UpstreamType::Embeddings => app,
+        UpstreamType::Embeddings => app.route("/embeddings", post(embeddings_handler)),
     };
 
     let app = app.with_state(state);
