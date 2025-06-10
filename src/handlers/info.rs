@@ -3,7 +3,7 @@ use crate::{
     proxy::ProxyState,
     schemas::{
         azure::QueryParameters,
-        info::{AzureInfoResponse, InfoResponse, ModelType},
+        info::{InfoResponse, ModelType, OpenAIInfoResponse},
     },
     utils::{append_path_to_uri, check_api_version},
 };
@@ -19,7 +19,7 @@ pub async fn info_handler(
     headers: HeaderMap,
     Query(query): Query<QueryParameters>,
     State(state): State<ProxyState>,
-) -> Result<Json<AzureInfoResponse>, AzureError> {
+) -> Result<Json<InfoResponse>, AzureError> {
     // Checks that the `api-version` query parameter is provided and valid
     check_api_version(query.api_version)?;
 
@@ -50,7 +50,7 @@ pub async fn info_handler(
         .await
         .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
 
-    let info: InfoResponse = serde_json::from_slice(&body_bytes)
+    let info: OpenAIInfoResponse = serde_json::from_slice(&body_bytes)
         .map_err(|e| AzureError::InternalParsing(e.to_string()))?;
 
     let (model_provider_name, model_name) = info.data[0]
@@ -58,11 +58,12 @@ pub async fn info_handler(
         .split_once("/")
         // Necessary to prevent that if the split fails for some reason as e.g. the `id` is
         // internally set to a path, then the original `id` information is preserved and
-        // returned even if "not correct"
+        // returned even if "not correct"; when working with models from the Hugging Face Hub
         .unwrap_or((&info.data[0].id, &info.data[0].id));
 
-    Ok(Json(AzureInfoResponse {
+    Ok(Json(InfoResponse {
         model_name: model_name.to_string(),
+        // TODO: based on env variable define whether the model is ChatCompletion or Embeddings
         model_type: ModelType::ChatCompletion,
         model_provider_name: model_provider_name.to_string(),
     }))
