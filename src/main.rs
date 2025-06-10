@@ -12,15 +12,20 @@
 //! ## Usage
 //!
 //! First you need to have access to a running API with an OpenAI-compatible interface i.e. with
-//! the `v1/chat/completions` endpoint available. If deployed locally or within the same instance
+//! the `/v1/models` endpoint and either `/v1/embeddings` or `/v1/chat/completions` endpoints available,
+//! for both generating embeddings and chat completions, respectively. If deployed locally or within the same instance
 //! as the proxy, it should be deployed on a port different than the port 80, which is reserved for
 //! the proxy.
 //!
 //! ```
-//! openai-azure-proxy --host 0.0.0.0 --port 80 --upstream-host 0.0.0.0 --upstream-port 8080
+//! openai-azure-proxy \
+//!     --host 0.0.0.0 --port 80 \
+//!     --upstream-host 0.0.0.0 --upstream-port 8080 \
+//!     --upstream-type chat-completions
 //! ```
 
-use clap::Parser;
+use clap::{Parser, ValueEnum};
+use serde::Serialize;
 
 mod errors;
 mod handlers;
@@ -29,6 +34,14 @@ mod schemas;
 mod utils;
 
 use proxy::start_server;
+
+#[derive(ValueEnum, Clone, Default, Debug, Serialize)]
+#[serde(rename_all = "kebab-case")]
+pub enum UpstreamType {
+    #[default]
+    ChatCompletions,
+    Embeddings,
+}
 
 #[derive(Parser)]
 #[command(name = "openai-azure-proxy", version, about)]
@@ -44,6 +57,9 @@ struct Cli {
 
     #[arg(short, long, env, default_value = "8080")]
     upstream_port: u16,
+
+    #[arg(short, long, env)]
+    upstream_type: UpstreamType,
 }
 
 /// Entrypoint for the binary, that runs the Axum proxy
@@ -55,6 +71,7 @@ async fn main() {
         Some(&args.port),
         &args.upstream_host,
         Some(&args.upstream_port),
+        &args.upstream_type,
     )
     .await;
 }

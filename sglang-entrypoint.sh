@@ -25,7 +25,7 @@ export HF_HUB_USER_AGENT_ORIGIN="azure:foundry:gpu-cuda:inference:sglang-native"
 python3 -m sglang.launch_server --host "$UPSTREAM_HOST" --port "$UPSTREAM_PORT" "$@" &
 UPSTREAM_PID=$!
 
-openai-azure-proxy --host "$PROXY_HOST" --port "$PROXY_PORT" --upstream-host "$UPSTREAM_HOST" --upstream-port "$UPSTREAM_PORT" &
+openai-azure-proxy --host "$PROXY_HOST" --port "$PROXY_PORT" --upstream-host "$UPSTREAM_HOST" --upstream-port "$UPSTREAM_PORT" --upstream-type chat-completions &
 PROXY_PID=$!
 
 wait -n $UPSTREAM_PID $PROXY_PID

@@ -1,5 +1,8 @@
-use crate::handlers::{
-    chat_completions::chat_completions_handler, health::health_handler, info::info_handler,
+use crate::{
+    handlers::{
+        chat_completions::chat_completions_handler, health::health_handler, info::info_handler,
+    },
+    UpstreamType,
 };
 use axum::{
     body::Body,
@@ -29,6 +32,7 @@ pub async fn start_server(
     port: Option<&u16>,
     upstream_host: &str,
     upstream_port: Option<&u16>,
+    upstream_type: &UpstreamType,
 ) {
     tracing_subscriber::fmt()
         .with_env_filter(
@@ -48,14 +52,18 @@ pub async fn start_server(
 
     let state = ProxyState { client, uri };
 
-    // TODO(env): use env to control which routes should be exposed
     // TODO: add periodic health checks to the underlying service to terminate the proxy if the
     // underlying service is down
     let app = Router::new()
         .route("/health", get(health_handler))
-        .route("/info", get(info_handler))
-        .route("/chat/completions", post(chat_completions_handler))
-        .with_state(state);
+        .route("/info", get(info_handler));
+    let app = match upstream_type {
+        UpstreamType::ChatCompletions => {
+            app.route("/chat/completions", post(chat_completions_handler))
+        }
+        UpstreamType::Embeddings => app,
+    };
+    let app = app.with_state(state);
 
     let listener = tokio::net::TcpListener::bind(format!(
         "{}:{}",
