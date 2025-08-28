@@ -1,46 +1,38 @@
-# `azure-openai-proxy`
+# Azure AI Model Inference Proxy for OpenAI APIs
 
-`azure-openai-proxy` is a proxy for [Azure AI Model Inference API](https://learn.microsoft.com/en-us/azure/ai-foundry/model-inference/overview)
-routes to OpenAI-compatible APIs (`/v1/chat/completions`, `/v1/embeddings`), written in Rust.
+A Rust-based proxy that exposes [Azure AI Model Inference API](https://learn.microsoft.com/en-us/azure/ai-foundry/model-inference/overview) routes and forwards requests to OpenAI-compatible backends.
 
-[More information about the Azure AI Model Inference API](https://learn.microsoft.com/en-us/rest/api/aifoundry/modelinference/?view=rest-aifoundry-model-inference-2025-04-01).
+> [!WARNING]
+> This project is an independent open source implementation and is not affiliated with or endorsed by Microsoft or Azure.
+
+## Features
+
+- Backend-agnostic, works with any OpenAI-compatible service
+- Includes presets / targets for Text Generation Inference, vLLM, SGLang, and Text Embeddings Inference
+- Matches Azure AI Model Inference API routes seamlessly
+- Supports chat-completions and embedding models
 
 ## Usage
 
-> [!NOTE]
-> The `azure-openai-proxy` is backend agnostic, meaning that it will work seamlessly
-> if the proxy is deployed on another instance that's not the instance running the inference
-> engine; so there's no such thing as requirements, besides having an OpenAI-compatible
-> service running somewhere that's accessible.
-
-### Docker (Recommended)
-
-When running the `azure-openai-proxy` via Docker, the `tgi-entrypoint.sh` will handle
-both the initialization of the inference engine (in this case being [Text Generation Inference (TGI)](https://github.com/huggingface/text-generation-inference)),
-as well as the initialization of the proxy; and the graceful shutdown of those via
-proper signal handling.
-
-```bash
+```console
 git clone git@github.com:alvarobartt/azure-openai-proxy.git
 cd azure-openai-proxy/
-docker build --platform=linux/amd64 -t huggingface-azure-tgi:latest -f Dockerfile --target tgi .
 ```
 
-Note that also the [SGLang](https://github.com/sgl-project/sglang) and [vLLM](https://github.com/vllm-project/vllm)
-backends have a target defined within the `Dockerfile`, as well as their respective entrypoint, to be built as:
+Once cloned, build the `Dockerfile` for [Text Generation Inference (TGI)](https://github.com/huggingface/text-generation-inference):
 
 ```bash
-docker build --platform=linux/amd64 -t huggingface-azure-sglang:latest -f Dockerfile --target sglang .
-docker build --platform=linux/amd64 -t huggingface-azure-vllm:latest -f Dockerfile --target vllm .
+docker build --platform=linux/amd64 \
+    -t huggingface-azure-tgi:latest \
+    -f Dockerfile \
+    --target tgi \
+    .
 ```
 
-> [!NOTE]
-> Ideally the containers should be published to a publicly available Docker Registry,
-> either the Docker Hub (docker.io) or the Azure Container Registry (mcr.microsoft.com).
+When running the `azure-openai-proxy` via Docker, the initialization of both the inference engine
+and the proxy will be automatically handled, as well as the graceful shutdown with signal handling.
 
-Then you need to make sure that you have access to at least a single NVIDIA GPU,
-as it's required by TGI to run the inference server for the model aforementioned; and
-then run the container as follows:
+Then you need to make sure that you have access to at least a single NVIDIA GPU and run the container as:
 
 ```bash
 docker run \
@@ -53,9 +45,19 @@ docker run \
     --model-id TinyLlama/TinyLlama-1.1B-Chat-v1.0
 ```
 
-Or SGLang as follows:
+Note that also the [SGLang](https://github.com/sgl-project/sglang) and [vLLM](https://github.com/vllm-project/vllm)
+images can be built and ran.
+
+<details>
+    <summary>Or SGLang as follows:</summary>
 
 ```bash
+docker build --platform=linux/amd64 \
+    -t huggingface-azure-sglang:latest \
+    -f Dockerfile \
+    --target sglang \
+    .
+
 docker run \
     --ipc host \
     --gpus all \
@@ -66,10 +68,18 @@ docker run \
     huggingface-azure-sglang:latest \
     --model-path TinyLlama/TinyLlama-1.1B-Chat-v1.0
 ```
+</details>
 
-Or vLLM as follows:
+<details>
+    <summary>Or vLLM as follows:</summary>
 
 ```bash
+docker build --platform=linux/amd64 \
+    -t huggingface-azure-vllm:latest \
+    -f Dockerfile \
+    --target vllm \
+    .
+
 docker run \
     --ipc host \
     --gpus all \
@@ -81,16 +91,10 @@ docker run \
     huggingface-azure-vllm:latest \
     --model TinyLlama/TinyLlama-1.1B-Chat-v1.0
 ```
+</details>
 
-Finally, you should be able to send requests in an Azure AI Model Inference compatible manner to the
-deployed proxy, and it should upstream those to the inference engine (being TGI in this
-case), making sure that the I/O schemas and paths are compliant with the Azure AI Model Inference API.
-
-> [!WARNING]
-> There may be a subtle overhead in the proxy, as in all the proxy services,
-> due to the network. The delay shouldn't be noticeable, but just take that into consideration
-> when benchmarking or testing the deployed service via the proxy, as the numbers won't be
-> the same as when directly calling to whatever engine is behind.
+Finally, you should be able to send requests with the Azure AI Model Inference API specification, and
+the proxy will forward those to the underlying inference engine.
 
 ```bash
 curl http://localhost/chat/completions?api-version=2025-04-01 \
@@ -98,7 +102,7 @@ curl http://localhost/chat/completions?api-version=2025-04-01 \
     -d '{"messages":[{"role":"system","content":"You are a helpful assistant."},{"role":"user","content":"What is Deep Learning?"}]}'
 ```
 
-Alternatively, you can also use `azure-ai-inference` as follows:
+Alternatively, you can also use the `azure-ai-inference` Python SDK as:
 
 ```python
 from azure.ai.inference import ChatCompletionsClient
@@ -117,10 +121,10 @@ response = client.complete(
 Find more examples at [`examples/`](examples/).
 
 > [!NOTE]
-> If deployed within Azure infrastructure, you should replace the "http://localhost"
-> with the actual endpoint URI and the required credentials.
+> If deployed on Azure, you should replace the host i.e., "http://localhost", with the
+> Azure AI / ML Endpoint URL, as well as setting the required endpoint credentials.
 
-### Locally
+## Development
 
 Install the Rust binary as it follows:
 
