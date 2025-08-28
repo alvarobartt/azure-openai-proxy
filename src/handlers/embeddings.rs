@@ -19,9 +19,9 @@ use axum::{
 use std::collections::HashMap;
 
 /// This function proxies the requests to `/embeddings` to the underlying `/v1/embeddings`,
-/// making sure that the I/O schemas are Azure AI compliant. This function handles that the
-/// `api-version` query parameter is provided, builds the URI for the underlying service, and
-/// proxies the request to `/v1/embeddings`.
+/// making sure that the I/O schemas are compliant with the Azure AI Model Inference API
+/// specification. This function handles that the `api-version` query parameter is provided,
+/// builds the URI for the underlying service, and proxies the request to `/v1/embeddings`.
 pub async fn embeddings_handler(
     method: Method,
     mut headers: HeaderMap,

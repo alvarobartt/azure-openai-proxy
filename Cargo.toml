@@ -1,11 +1,11 @@
 [package]
-name = "openai-azure-proxy"
+name = "azure-openai-proxy"
 version = "0.1.0"
 edition = "2024"
 readme = "README.md"
 license = "MIT OR Apache-2.0"
-description = "A proxy for OpenAI-compatible routes to Azure AI Model Inference API"
-repository = "https://github.com/alvarobartt/openai-azure-proxy"
+description = "A proxy for Azure AI Model Inference API routes to OpenAI-compatible APIs"
+repository = "https://github.com/alvarobartt/azure-openai-proxy"
 authors = ["Alvaro Bartolome <alvarobartt@gmail.com>"]
 
 [dependencies]

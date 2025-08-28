@@ -1,48 +1,37 @@
-# `openai-azure-proxy`
+# `azure-openai-proxy`
 
-`openai-azure-proxy` is a proxy for OpenAI-compatible routes (`/v1/chat/completions`, `/v1/embeddings`,
-etc.) to [Azure AI Model Inference API](https://learn.microsoft.com/en-us/azure/ai-foundry/model-inference/overview).
+`azure-openai-proxy` is a proxy for [Azure AI Model Inference API](https://learn.microsoft.com/en-us/azure/ai-foundry/model-inference/overview)
+routes to OpenAI-compatible APIs (`/v1/chat/completions`, `/v1/embeddings`), written in Rust.
 
-[More information about the Azure AI Model Inference API schemas](https://learn.microsoft.com/en-us/rest/api/aifoundry/modelinference/?view=rest-aifoundry-model-inference-2025-04-01).
+[More information about the Azure AI Model Inference API](https://learn.microsoft.com/en-us/rest/api/aifoundry/modelinference/?view=rest-aifoundry-model-inference-2025-04-01).
 
 ## Usage
 
 > [!NOTE]
-> The `openai-azure-proxy` is backend agnostic, meaning that it will work seamlessly
+> The `azure-openai-proxy` is backend agnostic, meaning that it will work seamlessly
 > if the proxy is deployed on another instance that's not the instance running the inference
 > engine; so there's no such thing as requirements, besides having an OpenAI-compatible
 > service running somewhere that's accessible.
 
-> [!TIP]
-> The capabilities / resources of the instance will depend on which model from the 
-> Hugging Face Hub you want to run, TL;DR the bigger the model in number of parameters
-> (by the order of billion of parameters) the larger the total VRAM of the instance.
->
-> The examples below, runs the Azure AI Model Inference API proxy for
-> [`TinyLlama/TinyLlama-1.1B-Chat-v1.0`](https://huggingface.co/TinyLlama/TinyLlama-1.1B-Chat-v1.0)
-> which requires ~2.42GiB of VRAM including the CUDA overhead and the KV Cache, with
-> the default context size of 2048. Note that the larger the context size i.e. maximum I/O
-> supported tokens, the larger the KV Cache will be and the more VRAM will be consumed.
-
 ### Docker (Recommended)
 
-When running the `openai-azure-proxy` via Docker, the `tgi-entrypoint.sh` will handle
+When running the `azure-openai-proxy` via Docker, the `tgi-entrypoint.sh` will handle
 both the initialization of the inference engine (in this case being [Text Generation Inference (TGI)](https://github.com/huggingface/text-generation-inference)),
 as well as the initialization of the proxy; and the graceful shutdown of those via
 proper signal handling.
 
 ```bash
-git clone git@github.com:alvarobartt/openai-azure-proxy.git
-cd openai-azure-proxy/
-docker build --platform=linux/amd64 --target tgi -t huggingface-azure-tgi:3.2.3 -f Dockerfile .
+git clone git@github.com:alvarobartt/azure-openai-proxy.git
+cd azure-openai-proxy/
+docker build --platform=linux/amd64 -t huggingface-azure-tgi:latest -f Dockerfile --target tgi .
 ```
 
 Note that also the [SGLang](https://github.com/sgl-project/sglang) and [vLLM](https://github.com/vllm-project/vllm)
 backends have a target defined within the `Dockerfile`, as well as their respective entrypoint, to be built as:
 
 ```bash
-docker build --platform=linux/amd64 --target sglang -t huggingface-azure-sglang:v0.4.6.post2-cu124 -f Dockerfile .
-docker build --platform=linux/amd64 --target vllm -t huggingface-azure-vllm:v0.8.5.post1 -f Dockerfile .
+docker build --platform=linux/amd64 -t huggingface-azure-sglang:latest -f Dockerfile --target sglang .
+docker build --platform=linux/amd64 -t huggingface-azure-vllm:latest -f Dockerfile --target vllm .
 ```
 
 > [!NOTE]
@@ -60,7 +49,7 @@ docker run \
     -p 80:80 \
     -e UPSTREAM_PORT=8080 \
     -v ~/.cache/huggingface:/data \
-    huggingface-azure-tgi:3.2.3 \
+    huggingface-azure-tgi:latest \
     --model-id TinyLlama/TinyLlama-1.1B-Chat-v1.0
 ```
 
@@ -74,7 +63,7 @@ docker run \
     -p 80:80 \
     -e UPSTREAM_PORT=30000 \
     -v ~/.cache/huggingface:/root/.cache/huggingface \
-    huggingface-azure-sglang:v0.4.6.post2-cu124 \
+    huggingface-azure-sglang:latest \
     --model-path TinyLlama/TinyLlama-1.1B-Chat-v1.0
 ```
 
@@ -89,7 +78,7 @@ docker run \
     -p 80:80 \
     -e UPSTREAM_PORT=8000 \
     -v ~/.cache/huggingface:/root/.cache/huggingface \
-    huggingface-azure-vllm:v0.8.5.post1 \
+    huggingface-azure-vllm:latest \
     --model TinyLlama/TinyLlama-1.1B-Chat-v1.0
 ```
 
@@ -143,16 +132,16 @@ Then you can easily run it and connect it to a running OpenAI-compatible server 
 exposes the `/v1/chat/completions` endpoint:
 
 ```bash
-openai-azure-proxy --upstream-host https://api.openai.com --upstream-port 80
+azure-openai-proxy --upstream-host https://api.openai.com --upstream-port 80
 ```
 
 For more information check the `--help`:
 
 ```console
-$ openai-azure-proxy --help
-A proxy for OpenAI-compatible routes to Azure AI Model Inference API
+$ azure-openai-proxy --help
+A proxy for Azure AI Model Inference API routes to OpenAI-compatible APIs
 
-Usage: openai-azure-proxy [OPTIONS]
+Usage: azure-openai-proxy [OPTIONS]
 
 Options:
   -h, --host <HOST>                    [env: HOST=] [default: 0.0.0.0]

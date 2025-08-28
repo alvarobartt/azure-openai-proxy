@@ -1,6 +1,6 @@
 //! # OpenAI Azure Proxy
 //!
-//! `openai-azure-proxy` is a binary that runs a proxy to make any OpenAI-compatible API (text
+//! `azure-openai-proxy` is a binary that runs a proxy to make any OpenAI-compatible API (text
 //! generation only at the moment) compatible with Azure AI Model Inference API schemas.
 //!
 //! ## Installation
@@ -12,13 +12,13 @@
 //! ## Usage
 //!
 //! First you need to have access to a running API with an OpenAI-compatible interface i.e. with
-//! the `/v1/models` endpoint and either `/v1/embeddings` or `/v1/chat/completions` endpoints available,
-//! for both generating embeddings and chat completions, respectively. If deployed locally or within the same instance
-//! as the proxy, it should be deployed on a port different than the port 80, which is reserved for
-//! the proxy.
+//! the `/v1/models` endpoint and either `/v1/embeddings` or `/v1/chat/completions` endpoints
+//! available, for both generating embeddings and chat completions, respectively. If deployed
+//! locally or within the same instance as the proxy, it should be deployed on a port different
+//! than the port 80, which is reserved for the proxy.
 //!
 //! ```
-//! openai-azure-proxy \
+//! azure-openai-proxy \
 //!     --host 0.0.0.0 --port 80 \
 //!     --upstream-host 0.0.0.0 --upstream-port 8080 \
 //!     --upstream-type chat-completions
@@ -44,7 +44,7 @@ pub enum UpstreamType {
 }
 
 #[derive(Parser)]
-#[command(name = "openai-azure-proxy", version, about)]
+#[command(name = "azure-openai-proxy", version, about)]
 struct Cli {
     #[arg(short, long, env, default_value = "0.0.0.0")]
     host: String,
