@@ -23,7 +23,7 @@ UPSTREAM_PORT="${UPSTREAM_PORT:-8080}"
 # and that only one of `PORT`, `UPSTREAM_PORT` or `-p/--port` is set
 if [[ -n "$UPSTREAM_PORT" ]]; then
     if [[ "$UPSTREAM_PORT" -eq 80 ]]; then
-        echo "ERROR: UPSTREAM_PORT environment variable cannot be set to 80 when running text-embeddings-inference with Docker, as the port 80 is reserved for the openai-azure-proxy service. Use another port as e.g. 8080, since 80 is the default port for TEI, but that leads to conflicts in this scenario."
+        echo "ERROR: UPSTREAM_PORT environment variable cannot be set to 80 when running text-embeddings-inference with Docker, as the port 80 is reserved for the azure-openai-proxy service. Use another port as e.g. 8080, since 80 is the default port for TEI, but that leads to conflicts in this scenario."
         exit 1
     fi
     UPSTREAM_PORT=$UPSTREAM_PORT
@@ -47,7 +47,7 @@ else
 fi
 UPSTREAM_PID=$!
 
-openai-azure-proxy --host "$PROXY_HOST" --port "$PROXY_PORT" --upstream-host "$UPSTREAM_HOST" --upstream-port "$UPSTREAM_PORT" --upstream-type embeddings &
+azure-openai-proxy --host "$PROXY_HOST" --port "$PROXY_PORT" --upstream-host "$UPSTREAM_HOST" --upstream-port "$UPSTREAM_PORT" --upstream-type embeddings &
 PROXY_PID=$!
 
 wait -n $UPSTREAM_PID $PROXY_PID

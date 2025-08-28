@@ -14,7 +14,7 @@ UPSTREAM_PORT="${UPSTREAM_PORT:-8000}"
 # and that only one of `PORT`, `UPSTREAM_PORT` or `-p/--port` is set
 if [[ -n "$UPSTREAM_PORT" ]]; then
     if [[ "$UPSTREAM_PORT" -eq 80 ]]; then
-        echo "ERROR: UPSTREAM_PORT environment variable cannot be set to 80 when running vLLM with Docker, as the port 80 is reserved for the openai-azure-proxy service. Use the port 8000 instead, which is vLLM's default."
+
         exit 1
     fi
     UPSTREAM_PORT=$UPSTREAM_PORT
@@ -25,7 +25,7 @@ export HF_HUB_USER_AGENT_ORIGIN="azure:foundry:gpu-cuda:inference:vllm-native"
 python3 -m vllm.entrypoints.openai.api_server --host "$UPSTREAM_HOST" --port "$UPSTREAM_PORT" "$@" &
 UPSTREAM_PID=$!
 
-openai-azure-proxy --host "$PROXY_HOST" --port "$PROXY_PORT" --upstream-host "$UPSTREAM_HOST" --upstream-port "$UPSTREAM_PORT" --upstream-type chat-completions &
+azure-openai-proxy --host "$PROXY_HOST" --port "$PROXY_PORT" --upstream-host "$UPSTREAM_HOST" --upstream-port "$UPSTREAM_PORT" --upstream-type chat-completions &
 PROXY_PID=$!
 
 wait -n $UPSTREAM_PID $PROXY_PID
